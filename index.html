@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gero-Check Ultimate v8</title>
+    <style>
+        :root { --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #8e8e93; --light-bg: #f2f2f7; --h-color: var(--gray); --m-color: var(--gray); }
+        body { font-family: -apple-system, sans-serif; background: var(--light-bg); padding: 15px; color: #1c1e21; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 520px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 20px; font-weight: 800; }
+        h3 { border-bottom: 1px solid #e5e5ea; padding-bottom: 5px; margin-top: 20px; font-size: 13px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        label { font-weight: 600; font-size: 15px; flex: 1; }
+        input, select, textarea { padding: 12px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 16px; background: #fff; }
+        input[type="number"], select { width: 90px; text-align: center; }
+        textarea { width: 100%; margin-top: 10px; border-radius: 12px; font-family: inherit; }
+        
+        /* Dynamic Chips */
+        .chips-container { display: none; margin-top: 15px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .chip { padding: 10px 14px; background: #fff; border-radius: 20px; font-size: 12px; cursor: pointer; border: 2px solid var(--gray); transition: 0.3s; font-weight: 600; color: var(--gray); }
+        
+        /* Status Classes for Chips */
+        .chip.active-h { background: var(--h-color) !important; color: white !important; border-color: var(--h-color) !important; }
+        .chip.active-m { background: var(--m-color) !important; color: white !important; border-color: var(--m-color) !important; }
+        .chip.active-h.status-yellow, .chip.active-m.status-yellow { color: black !important; }
+
+        .res-container { display: flex; gap: 10px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 700; font-size: 12px; color: white; background: var(--gray); }
+        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 16px; text-align: center; font-weight: 800; font-size: 22px; color: white; background: var(--gray); }
+        
+        button { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-calc { background: var(--blue); color: white; }
+        .btn-print { background: #fff; color: var(--blue); border: 2px solid var(--blue); margin-top: 25px; display: none; }
+        .btn-reset { background: transparent; color: var(--red); font-size: 13px; border: none; text-decoration: underline; margin-top: 20px; width: auto; }
+
+        #print-area { display: none; }
+        @media print {
+            body { background: white; padding: 0; }
+            .card, button, .group, h3, select, input, textarea { display: none !important; }
+            #print-area { display: block; width: 100%; }
+            .page { page-break-after: always; padding: 40px; min-height: 98vh; position: relative; }
+            h1 { color: var(--blue); border-bottom: 3px solid var(--blue); }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+            .box-print { border: 2px solid #000; padding: 15px; border-radius: 10px; margin: 15px 0; -webkit-print-color-adjust: exact; }
+            .disclaimer { font-size: 9px; color: gray; position: absolute; bottom: 20px; border-top: 1px solid #eee; padding-top: 10px; width: 85%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Gero-Check Ultimate v8</h2>
+    
+    <div class="group"><label>Patient / ID</label><input type="text" id="p-name" placeholder="ID..." style="width:160px"></div>
+    <div class="group"><label>Datum</label><input type="date" id="p-date"></div>
+    <div class="group"><label>Geschlecht</label><select id="sex"><option value="m">Männlich</option><option value="w">Weiblich</option></select></div>
+
+    <h3>1. Hämodynamik</h3>
+    <div class="group"><label>SpO2 (%)</label><input type="number" id="spo2" value="96"></div>
+    <div class="group"><label>Puls / PI</label><div><input type="number" id="hr" value="70" style="width:45px"> / <input type="number" id="pi" step="0.1" value="1.5" style="width:45px"></div></div>
+    <div class="group"><label>Orthostase <small>(Abfall)</small></label><input type="number" id="rr" value="5"></div>
+
+    <h3>2. Somatik</h3>
+    <div class="group"><label>Gang / TUG</label><div><input type="number" id="walk" step="0.1" value="4.5" style="width:45px"> / <input type="number" id="tug" step="0.1" value="9.5" style="width:45px"></div></div>
+    <div class="group"><label>Chair Rise / Kraft</label><div><input type="number" id="chair" step="0.1" value="10.0" style="width:45px"> / <input type="number" id="grip" value="35" style="width:45px"></div></div>
+
+    <button class="btn-calc" id="calc-btn" onclick="calculate()">Analyse & Score berechnen</button>
+
+    <div class="res-container">
+        <div id="resH" class="res-box">H-SCORE</div>
+        <div id="resM" class="res-box">M-SCORE</div>
+    </div>
+    <div id="total-vitality">VITALITÄT</div>
+
+    <div id="therapy-section" class="chips-container">
+        <h3 style="color: var(--blue);">3. Therapiemodule (Hämodynamik)</h3>
+        <div class="chips" id="h-chips">
+            <div class="chip" onclick="toggleChip(this, 'h')">Trinkmenge ↑</div>
+            <div class="chip" onclick="toggleChip(this, 'h')">Kompression</div>
+            <div class="chip" onclick="toggleChip(this, 'h')">Med.-Review (H)</div>
+            <div class="chip" onclick="toggleChip(this, 'h')">Salz-Zufuhr prüfen</div>
+            <div class="chip" onclick="toggleChip(this, 'h')">Vitalzeichen-Home</div>
+        </div>
+
+        <h3 style="color: var(--blue);">4. Therapiemodule (Somatik)</h3>
+        <div class="chips" id="m-chips">
+            <div class="chip" onclick="toggleChip(this, 'm')">Physiotherapie</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Krafttraining</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Ergotherapie</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Protein-Zufuhr ↑</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Sturzprophylaxe</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Wohnraumanpassung</div>
+            <div class="chip" onclick="toggleChip(this, 'm')">Kognitives Training</div>
+        </div>
+        <textarea id="p-comment" rows="2" placeholder="Zusätzlicher ärztlicher Befund..."></textarea>
+    </div>
+
+    <button class="btn-print" id="btn-print" onclick="prepareAndPrint()">Berichte drucken / PDF</button>
+    <div style="text-align:center;"><button class="btn-reset" onclick="resetForm()">Nächste Visite (Reset)</button></div>
+</div>
+
+<div id="print-area">
+    <div class="page" id="doc-page">
+        <h1>Ärztlicher Befundbericht (Intern)</h1>
+        <p id="doc-meta"></p>
+        <table><thead><tr><th>Messparameter</th><th>Ergebnis</th><th>Med. Terminologie</th></tr></thead><tbody id="doc-table"></tbody></table>
+        <div id="doc-interp" class="box-print"></div>
+        <div id="doc-actions" style="margin-top:20px;"></div>
+        <p class="disclaimer">Vorbehaltlich ärztlicher Prüfung. Geriatrisches Assessment v8.0.</p>
+    </div>
+    <div class="page" id="pat-page">
+        <h1>Ihre Gesundheits-Übersicht</h1>
+        <p id="pat-meta"></p>
+        <p>Guten Tag! Hier sind Ihre heutigen Ergebnisse im Überblick:</p>
+        <table><thead><tr><th>Bereich</th><th>Ergebnis</th><th>Bedeutung</th></tr></thead><tbody id="pat-table"></tbody></table>
+        <div id="pat-interp" class="box-print"></div>
+        <div id="pat-advice" style="margin-top:20px; padding:15px; border:1px solid #ccc; border-radius:10px;"></div>
+        <p class="disclaimer">Information für den Patienten. Bitte besprechen Sie Details bei der Visite.</p>
+    </div>
+</div>
+
+<script>
+document.getElementById('p-date').valueAsDate = new Date();
+let currentHColor = 'var(--gray)';
+let currentMColor = 'var(--gray)';
+let isYellowH = false;
+let isYellowM = false;
+
+function toggleChip(el, type) {
+    const activeClass = type === 'h' ? 'active-h' : 'active-m';
+    const isYellow = type === 'h' ? isYellowH : isYellowM;
+    el.classList.toggle(activeClass);
+    if(isYellow) el.classList.toggle('status-yellow');
+}
+
+function calculate() {
+    // Daten sauber abgreifen
+    const d = {
+        spo2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        pi: +document.getElementById('pi').value, rr: +document.getElementById('rr').value,
+        wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value,
+        ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value,
+        sex: document.getElementById('sex').value
+    };
+
+    // H-Score
+    let sH = 0; if(d.spo2>=95) sH+=2; else if(d.spo2>=91) sH+=1;
+    if(d.hr>=60 && d.hr<=85) sH+=2; else if(d.hr>=50 && d.hr<=100) sH+=1;
+    if(d.pi>=1.5) sH+=2; else if(d.pi>=0.6) sH+=1;
+    if(d.rr<10) sH+=2; else if(d.rr<=20) sH+=1;
+
+    // M-Score
+    let sM = 0; if(d.wa<4.8) sM+=2; else if(d.wa<=6.5) sM+=1;
+    if(d.tg<10) sM+=2; else if(d.tg<=15) sM+=1;
+    if(d.ch<11) sM+=2; else if(d.ch<=15) sM+=1;
+    if(d.sex==='m'){ if(d.gr>=30) sM+=2; else if(d.gr>=26) sM+=1; }
+    else { if(d.gr>=18) sM+=2; else if(d.gr>=16) sM+=1; }
+
+    // Farben bestimmen
+    currentHColor = sH >= 7 ? 'var(--green)' : sH >= 5 ? 'var(--yellow)' : 'var(--red)';
+    currentMColor = sM >= 7 ? 'var(--green)' : sM >= 5 ? 'var(--yellow)' : 'var(--red)';
+    isYellowH = (sH >= 5 && sH < 7);
+    isYellowM = (sM >= 5 && sM < 7);
+
+    // CSS Variablen für Chips setzen
+    document.documentElement.style.setProperty('--h-color', currentHColor);
+    document.documentElement.style.setProperty('--m-color', currentMColor);
+
+    // UI Update Ampeln
+    updateBox('resH', sH, currentHColor, isYellowH, "H-SCORE");
+    updateBox('resM', sM, currentMColor, isYellowM, "M-SCORE");
+    
+    const t = sH + sM;
+    const bv = document.getElementById('total-vitality');
+    const tCol = t >= 13 ? 'var(--green)' : t >= 8 ? 'var(--yellow)' : 'var(--red)';
+    bv.style.background = tCol;
+    bv.style.color = (t >= 8 && t < 13) ? 'black' : 'white';
+    bv.innerHTML = `VITALITÄT: ${t >= 13 ? 'TOP' : t >= 8 ? 'LABIL' : 'KRITISCH'} (${t}/16)`;
+
+    // Workflow: Zeige Therapie
+    document.getElementById('therapy-section').style.display = 'block';
+    document.getElementById('btn-print').style.display = 'block';
+    document.getElementById('therapy-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateBox(id, score, color, isYellow, label) {
+    const el = document.getElementById(id);
+    el.style.background = color;
+    el.style.color = isYellow ? 'black' : 'white';
+    el.innerHTML = `${label}<br>${score}/8`;
+}
+
+function prepareAndPrint() {
+    const name = document.getElementById('p-name').value || "Patient-ID";
+    const date = new Date(document.getElementById('p-date').value).toLocaleDateString('de-DE');
+    const comment = document.getElementById('p-comment').value;
+    const hActive = Array.from(document.querySelectorAll('.chip.active-h')).map(c => c.innerText);
+    const mActive = Array.from(document.querySelectorAll('.chip.active-m')).map(c => c.innerText);
+    
+    const d = { spo2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value, pi: +document.getElementById('pi').value, rr: +document.getElementById('rr').value, wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value, ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value };
+
+    // Doc Seite
+    document.getElementById('doc-meta').innerHTML = `<strong>ID:</strong> ${name} | <strong>Datum:</strong> ${date}`;
+    document.getElementById('doc-table').innerHTML = `
+        <tr><td>Oxygenierung</td><td><b>${d.spo2} %</b></td><td>Arterieller Status</td></tr>
+        <tr><td>Ruhepuls</td><td><b>${d.hr} bpm</b></td><td>Kardiale Chronotropie</td></tr>
+        <tr><td>Orthostase</td><td><b>${d.rr} mmHg</b></td><td>Baroreflex-Status</td></tr>
+        <tr><td>Gangbild</td><td><b>${d.wa} s</b></td><td>Lokomotion (5m)</td></tr>
+        <tr><td>Beinkraft</td><td><b>${d.ch} s</b></td><td>Chair-Rise-Kraft</td></tr>
+        <tr><td>Handkraft</td><td><b>${d.gr} kg</b></td><td>Muskuläre Max.-Kraft</td></tr>`;
+    document.getElementById('doc-interp').innerHTML = `<strong>Klinischer Befund:</strong><br>${comment || "Keine weiteren Anmerkungen."}`;
+    document.getElementById('doc-actions').innerHTML = `<strong>Therapeutischer Plan:</strong> ${[...hActive, ...mActive].join(', ') || 'Keine markiert.'}`;
+
+    // Patienten Seite
+    document.getElementById('pat-meta').innerHTML = `<strong>Name/ID:</strong> ${name} | <strong>Datum:</strong> ${date}`;
+    document.getElementById('pat-table').innerHTML = `
+        <tr><td>Kreislauf</td><td><b>${currentHColor.includes('green') ? 'Stabil' : 'Beobachten'}</b></td><td>Ihre innere Sicherheit</td></tr>
+        <tr><td>Beweglichkeit</td><td><b>${currentMColor.includes('green') ? 'Sicher' : 'Eingeschränkt'}</b></td><td>Sicherheit beim Gehen</td></tr>`;
+    document.getElementById('pat-advice').innerHTML = `<strong>Ihre nächsten Schritte:</strong><ul>${[...hActive, ...mActive].map(c => `<li>${c}</li>`).join('')}</ul>`;
+
+    window.print();
+}
+
+function resetForm() { if(confirm("App zurücksetzen?")) location.reload(); }
+</script>
+</body>
+</html>
