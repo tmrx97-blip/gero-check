@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gero-Check Triple Score</title>
+    <title>Gero-Check Triple Pro</title>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f2f2f7; padding: 15px; color: #1c1e21; }
         .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
@@ -13,36 +13,39 @@
         label { font-weight: 500; font-size: 16px; flex: 1; }
         input, select { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; width: 85px; text-align: center; font-size: 16px; background: #fff; }
         .res-container { display: flex; gap: 10px; margin-top: 15px; }
-        .res-box { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 12px; background: #e5e5ea; border: 1px solid #d1d1d6; }
-        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 15px; text-align: center; font-weight: 800; font-size: 20px; background: #e5e5ea; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        button { width: 100%; padding: 18px; background: #007aff; color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: 600; margin-top: 20px; }
+        .res-box { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 12px; color: white; background: #e5e5ea; border: 1px solid #d1d1d6; }
+        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 15px; text-align: center; font-weight: 800; font-size: 20px; color: white; background: #e5e5ea; }
+        button { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 17px; font-weight: 600; margin-top: 10px; cursor: pointer; }
+        .btn-calc { background: #007aff; color: white; }
+        .btn-print { background: #f2f2f7; color: #007aff; border: 1px solid #007aff; margin-top: 15px; }
         .sub { font-size: 11px; color: #8e8e93; display: block; font-weight: 400; }
+        @media print { .btn-calc, .btn-print, h3, .group, select { display: none; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2>Gero-Check Triple</h2>
+    <h2>Gero-Check Triple Pro</h2>
     <div class="group"><label>Geschlecht</label><select id="sex"><option value="m">Männlich</option><option value="w">Weiblich</option></select></div>
 
     <h3>A. Kreislauf (Hämodynamik)</h3>
     <div class="group"><label>SpO2 (%)</label><input type="number" id="spo2" value="96"></div>
-    <div class="group"><label>Ruhepuls (bpm)</label><input type="number" id="hr" value="70"></div>
-    <div class="group"><label>PI Index</label><input type="number" id="pi" step="0.1" value="1.5"></div>
+    <div class="group"><label>Puls / PI Index</label><div><input type="number" id="hr" value="70" style="width:40px"> / <input type="number" id="pi" step="0.1" value="1.5" style="width:40px"></div></div>
     <div class="group"><label>Orthostase <span class="sub">Abfall mmHg</span></label><input type="number" id="rr" value="5"></div>
 
     <h3>B. Somatik (Mobilität)</h3>
-    <div class="group"><label>5m Gang <span class="sub">Sekunden</span></label><input type="number" id="walk" step="0.1" value="4.5"></div>
-    <div class="group"><label>TUG Test <span class="sub">Sekunden</span></label><input type="number" id="tug" step="0.1" value="9.5"></div>
+    <div class="group"><label>5m Gang / TUG</label><div><input type="number" id="walk" step="0.1" value="4.5" style="width:40px"> / <input type="number" id="tug" step="0.1" value="9.5" style="width:40px"></div></div>
     <div class="group"><label>Chair Rise <span class="sub">Sekunden</span></label><input type="number" id="chair" step="0.1" value="10.0"></div>
-    <div class="group"><label>Handkraft <span class="sub">kg (bis 90kg)</span></label><input type="number" id="grip" value="35"></div>
+    <div class="group"><label>Handkraft <span class="sub">kg (max 90kg)</span></label><input type="number" id="grip" value="35"></div>
 
-    <button onclick="calculate()">Gesamtanalyse</button>
+    <button class="btn-calc" onclick="calculate()">Analyse starten</button>
 
     <div class="res-container">
-        <div id="resH" class="res-box">KREISLAUF<br>-</div>
-        <div id="resM" class="res-box">SOMATIK<br>-</div>
+        <div id="resH" class="res-box" style="color:#8e8e93">KREISLAUF</div>
+        <div id="resM" class="res-box" style="color:#8e8e93">SOMATIK</div>
     </div>
-    <div id="total-vitality">VITALITÄTS-STATUS</div>
+    <div id="total-vitality" style="color:#8e8e93">VITALITÄT</div>
+    
+    <button class="btn-print" onclick="window.print()">Ergebnis drucken / PDF</button>
 </div>
 
 <script>
@@ -57,40 +60,36 @@ function calculate() {
     const ch = +document.getElementById('chair').value;
     const gr = +document.getElementById('grip').value;
 
-    let scoreH = 0;
-    if(o2>=95)scoreH+=2; else if(o2>=91)scoreH+=1;
-    if(hr>=60&&hr<=85)scoreH+=2; else if(hr>=50&&hr<=100)scoreH+=1;
-    if(pi>=1.5)scoreH+=2; else if(pi>=0.6)scoreH+=1;
-    if(rr<10)scoreH+=2; else if(rr<=20)scoreH+=1;
+    let sH = 0;
+    if(o2>=95) sH+=2; else if(o2>=91) sH+=1;
+    if(hr>=60&&hr<=85) sH+=2; else if(hr>=50&&hr<=100) sH+=1;
+    if(pi>=1.5) sH+=2; else if(pi>=0.6) sH+=1;
+    if(rr<10) sH+=2; else if(rr<=20) sH+=1;
 
-    let scoreM = 0;
-    if(wa<4.8)scoreM+=2; else if(wa<=6.5)scoreM+=1;
-    if(tg<10)scoreM+=2; else if(tg<=15)scoreM+=1;
-    if(ch<11)scoreM+=2; else if(ch<=15)scoreM+=1;
-    if(g==='m'){ if(gr>=30)scoreM+=2; else if(gr>=26)scoreM+=1; }
-    else { if(gr>=18)scoreM+=2; else if(gr>=16)scoreM+=1; }
+    let sM = 0;
+    if(wa<4.8) sM+=2; else if(wa<=6.5) sM+=1;
+    if(tg<10) sM+=2; else if(tg<=15) sM+=1;
+    if(ch<11) sM+=2; else if(ch<=15) sM+=1;
+    if(g==='m'){ if(gr>=30) sM+=2; else if(gr>=26) sM+=1; }
+    else { if(gr>=18) sM+=2; else if(gr>=16) sM+=1; }
 
-    const total = scoreH + scoreM;
-
-    // Display H-Score
+    const t = sH + sM;
     const bh = document.getElementById('resH');
     bh.style.color = "#fff";
-    if(scoreH>=7) { bh.style.background="#34c759"; bh.innerHTML="KREISLAUF<br>Stabil"; }
-    else if(scoreH>=5) { bh.style.background="#ffcc00"; bh.style.color="#000"; bh.innerHTML="KREISLAUF<br>Fragil"; }
+    if(sH>=7){ bh.style.background="#34c759"; bh.innerHTML="KREISLAUF<br>Stabil"; }
+    else if(sH>=5){ bh.style.background="#ffcc00"; bh.style.color="#000"; bh.innerHTML="KREISLAUF<br>Fragil"; }
     else { bh.style.background="#ff3b30"; bh.innerHTML="KREISLAUF<br>Risiko"; }
 
-    // Display M-Score
     const bm = document.getElementById('resM');
     bm.style.color = "#fff";
-    if(scoreM>=7) { bm.style.background="#34c759"; bm.innerHTML="SOMATIK<br>Robust"; }
-    else if(scoreM>=5) { bm.style.background="#ffcc00"; bm.style.color="#000"; bm.innerHTML="SOMATIK<br>Abbau"; }
+    if(sM>=7){ bm.style.background="#34c759"; bm.innerHTML="SOMATIK<br>Robust"; }
+    else if(sM>=5){ bm.style.background="#ffcc00"; bm.style.color="#000"; bm.innerHTML="SOMATIK<br>Abbau"; }
     else { bm.style.background="#ff3b30"; bm.innerHTML="SOMATIK<br>Frailty"; }
 
-    // Display Total Vitality
     const bv = document.getElementById('total-vitality');
     bv.style.color = "#fff";
-    if(total>=13) { bv.style.background="#34c759"; bv.innerHTML="VITALITÄT: TOP"; }
-    else if(total>=8) { bv.style.background="#ffcc00"; bv.style.color="#000"; bv.innerHTML="VITALITÄT: LABIL"; }
+    if(t>=13){ bv.style.background="#34c759"; bv.innerHTML="VITALITÄT: TOP"; }
+    else if(t>=8){ bv.style.background="#ffcc00"; bv.style.color="#000"; bv.innerHTML="VITALITÄT: LABIL"; }
     else { bv.style.background="#ff3b30"; bv.innerHTML="VITALITÄT: KRITISCH"; }
 }
 </script>
