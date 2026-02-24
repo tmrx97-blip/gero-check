@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gero-Check Ultimate v15</title>
+    <style>
+        :root { 
+            --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #1c1e21; --light-bg: #f2f2f7;
+        }
+        body { font-family: -apple-system, sans-serif; background: var(--light-bg); padding: 15px; color: #1c1e21; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 20px; font-weight: 800; }
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 20px; font-size: 14px; color: #8e8e93; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        label { font-weight: 600; font-size: 15px; flex: 1; }
+        input, select { padding: 12px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 16px; text-align: center; }
+        
+        /* Interactive Buttons/Chips */
+        .chips-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px; }
+        .offer-card { border: 2px solid #d1d1d6; border-radius: 15px; padding: 10px; transition: 0.3s; }
+        .offer-card.active { border-color: var(--blue); background: #f0f7ff; }
+        
+        .main-btn { width: 100%; padding: 18px; border: 2px solid #000; border-radius: 15px; font-size: 16px; font-weight: 700; background: transparent; color: #000; cursor: pointer; text-align: center; margin-bottom: 5px; }
+        .main-btn.selected { background: #000; color: #fff; }
+
+        /* SMART Selection */
+        .smart-options { display: none; margin: 10px 0; padding-left: 20px; }
+        .smart-btn { display: inline-block; padding: 8px 15px; border: 1px solid #8e8e93; border-radius: 20px; font-size: 13px; margin: 3px; cursor: pointer; color: #000; }
+        .smart-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+        .res-container { display: flex; gap: 10px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 800; font-size: 13px; color: #000; border: 2px solid #000; }
+        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 18px; text-align: center; font-weight: 900; font-size: 24px; border: 3px solid #000; }
+        
+        button.action-btn { width: 100%; padding: 20px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 20px; background: var(--blue); color: white; }
+        .btn-print { background: #fff !important; color: #000 !important; border: 2px solid #000 !important; display: none; }
+
+        @media print {
+            .card, .action-btn, .btn-print, .group, h3, input, select { display: none !important; }
+            #print-area { display: block; width: 100%; }
+            .page { page-break-after: always; padding: 40px; }
+            h1 { border-bottom: 3px solid #000; padding-bottom: 10px; }
+            .box-print { border: 1px solid #000; padding: 15px; border-radius: 10px; margin: 15px 0; }
+        }
+        #print-area { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Gero-Check Ultimate v15</h2>
+    
+    <div class="group"><label>Patient-ID / Handzeichen</label><input type="text" id="p-name" placeholder="ID"></div>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="75" style="width:60px"> / <input type="number" id="height" value="175" style="width:60px"></div></div>
+    <div class="group"><label>Blutdruck (syst/diast)</label><div><input type="number" id="sys" value="130" style="width:60px"> / <input type="number" id="dia" value="85" style="width:60px"></div></div>
+    <div class="group"><label>Puls / SpO2 %</label><div><input type="number" id="hr" value="70" style="width:60px"> / <input type="number" id="spo2" value="96" style="width:60px"></div></div>
+    <div class="group"><label>Nikotin (PY) / Sturz-Anamn.</label><div><input type="number" id="py" value="0" style="width:60px"> / <select id="fall"><option value="0">Nein</option><option value="1">Ja</option></select></div></div>
+
+    <button class="action-btn" onclick="calculate()">Schritt 1: Analyse starten</button>
+
+    <div class="res-container">
+        <div id="resH" class="res-box">H-SCORE</div>
+        <div id="resM" class="res-box">M-SCORE</div>
+    </div>
+    <div id="total-vitality">VITALITÄT</div>
+
+    <div id="shop-window" style="display:none; margin-top:30px;">
+        <h2 style="color: var(--blue);">Schritt 2: Therapie-Schaufenster</h2>
+        <div id="h-section"><h3>Hämodynamik & Herz</h3><div class="chips-grid" id="h-grid"></div></div>
+        <div id="m-section"><h3>Somatik & Kraft</h3><div class="chips-grid" id="m-grid"></div></div>
+        <div id="v-section"><h3>Resilienz & Teilhabe</h3><div class="chips-grid" id="v-grid"></div></div>
+        
+        <textarea id="p-comment" rows="3" style="width:100%; margin-top:20px; border-radius:10px; padding:10px;" placeholder="Weitere Vereinbarungen..."></textarea>
+        <button class="action-btn btn-print" id="btn-print" onclick="prepareAndPrint()">Schritt 3: Berichte drucken</button>
+    </div>
+    <div style="text-align:center;"><button style="background:none; border:none; color:red; text-decoration:underline; margin-top:20px;" onclick="location.reload()">Reset</button></div>
+</div>
+
+<div id="print-area">
+    <div class="page">
+        <h1 id="print-title">Mein Vitalitäts-Fahrplan</h1>
+        <p id="print-meta"></p>
+        <div class="box-print" id="print-status"></div>
+        <h2>Meine SMARTEN Ziele</h2>
+        <div id="print-goals"></div>
+        <div class="box-print" id="print-comment"></div>
+    </div>
+</div>
+
+<script>
+const OFFERS = {
+    h: [
+        {t: 'Wandern / Radfahren', s: ['3x 30 Min / Woche', '3x 45 Min / Woche', 'Täglich 20 Min']},
+        {t: 'Ernährung (DASH/Salzarm)', s: ['Max 1 TL Salz / Tag', '5 Portionen Obst/Gemüse', 'Vollkorn statt Weißmehl']},
+        {t: 'Nikotinentwöhnung', s: ['Stopp ab Morgen', 'Reduktion um 50%', 'Beratungstermin vereinbart']},
+        {t: 'Flüssigkeitsmangement', s: ['1.5 Liter / Tag', '2.0 Liter / Tag', 'Glas Wasser zu jeder Mahlzeit']}
+    ],
+    m: [
+        {t: 'Krafttraining (Beine)', s: ['Stuhlkante 3x10 Wdh', 'Einbeinstand b. Zähneputzen', 'Treppe statt Aufzug']},
+        {t: 'Physiotherapie', s: ['1x / Woche Termine', 'Heimübungen 15 Min / Tag', 'Rückenschule']},
+        {t: 'Protein-Optimierung', s: ['Quark/Ei zum Frühstück', 'Protein-Shake n. Training', 'Fleischreduktion / Hülsenfrüchte']}
+    ],
+    v: [
+        {t: 'Soziale Teilhabe', s: ['Besuch Seniorentreff', 'Ehrenamt 1x / Woche', 'Telefonat m. Angehörigen täglich']},
+        {t: 'Achtsamkeit & Stille', s: ['10 Min Meditation / Tag', 'Digital Detox n. 20 Uhr', 'Waldbaden 1x / Woche']},
+        {t: 'Kognitives Training', s: ['Rätsel / Sudoku täglich', 'Neue Sprache lernen', 'Lesekreis beitreten']}
+    ]
+};
+
+function calculate() {
+    const d = { sys: +document.getElementById('sys').value, hr: +document.getElementById('hr').value, bmi: +document.getElementById('weight').value / ((+document.getElementById('height').value/100)**2) };
+    const t = 18; // Beispielwert
+    
+    document.getElementById('resH').style.borderColor = (d.sys > 140) ? 'var(--red)' : 'var(--green)';
+    document.getElementById('total-vitality').style.borderColor = (t < 20) ? 'var(--yellow)' : 'var(--green)';
+    document.getElementById('total-vitality').innerHTML = `VITALITÄT: ${t < 20 ? 'LABIL' : 'TOP'}`;
+
+    document.getElementById('shop-window').style.display = 'block';
+    renderGrid('h-grid', OFFERS.h);
+    renderGrid('m-grid', OFFERS.m);
+    renderGrid('v-grid', OFFERS.v);
+    
+    document.getElementById('btn-print').style.display = 'block';
+    window.scrollTo({top: document.getElementById('shop-window').offsetTop, behavior: 'smooth'});
+}
+
+function renderGrid(containerId, list) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    list.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'offer-card';
+        div.innerHTML = `<button class="main-btn" onclick="toggleOffer(this, '${containerId}-${idx}')">${item.t}</button>
+                         <div class="smart-options" id="smart-${containerId}-${idx}">
+                            ${item.s.map(opt => `<span class="smart-btn" onclick="selectSmart(this)">${opt}</span>`).join('')}
+                         </div>`;
+        container.appendChild(div);
+    });
+}
+
+function toggleOffer(btn, smartId) {
+    const smartDiv = document.getElementById('smart-' + smartId);
+    btn.classList.toggle('selected');
+    smartDiv.style.display = btn.classList.contains('selected') ? 'block' : 'none';
+    btn.parentElement.classList.toggle('active');
+}
+
+function selectSmart(span) {
+    const siblings = span.parentElement.querySelectorAll('.smart-btn');
+    siblings.forEach(s => s.classList.remove('active'));
+    span.classList.add('active');
+}
+
+function prepareAndPrint() {
+    const id = document.getElementById('p-name').value || "Patient";
+    const date = new Date().toLocaleDateString('de-DE');
+    document.getElementById('print-meta').innerHTML = `<strong>ID:</strong> ${id} | <strong>Datum:</strong> ${date}`;
+    
+    let goalsHtml = "";
+    document.querySelectorAll('.offer-card.active').forEach(card => {
+        const title = card.querySelector('.main-btn').innerText;
+        const smart = card.querySelector('.smart-btn.active')?.innerText || "Kein spezifisches Ziel gewählt";
+        goalsHtml += `<div class="box-print"><strong>${title}</strong><br>Mein SMART-Ziel: ${smart}</div>`;
+    });
+    
+    document.getElementById('print-goals').innerHTML = goalsHtml;
+    document.getElementById('print-comment').innerText = document.getElementById('p-comment').value;
+    document.getElementById('print-area').style.display = 'block';
+    window.print();
+}
+</script>
+</body>
+</html>
