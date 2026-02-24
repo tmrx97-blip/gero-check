@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vital-Check Erfassungsbogen & Patienten-Info</title>
+    <style>
+        :root {
+            --blue: #007aff;
+            --gray: #f2f2f7;
+            --dark: #1c1e21;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--dark);
+            background: #e5e5ea; /* Grauer Hintergrund für Bildschirmansicht */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-sizing: border-box;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* Typografie & CI */
+        h1 {
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-bottom: 4px solid var(--dark);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 18px;
+            color: var(--blue);
+            border-bottom: 2px solid var(--gray);
+            padding-bottom: 5px;
+            margin-top: 25px;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        p {
+            font-size: 13.5px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        /* Bogen (Seite 1) */
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .input-line { border-bottom: 1px solid #000; width: 200px; display: inline-block; }
+        .section-title {
+            background: var(--gray); color: var(--dark); font-size: 16px; font-weight: bold;
+            padding: 10px 15px; border-left: 6px solid var(--blue); margin: 25px 0 15px 0;
+            border-radius: 4px; text-transform: uppercase;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        .form-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .form-table td { padding: 12px 5px; vertical-align: middle; border-bottom: 1px dashed #ccc; }
+        .col-label { width: 60%; font-weight: 600; }
+        .col-input { width: 40%; text-align: right; }
+        .box {
+            display: inline-block; width: 60px; height: 30px; border: 2px solid #000;
+            border-radius: 6px; vertical-align: middle; margin-left: 10px; background: #fafafa;
+        }
+        .box-large { width: 80px; }
+        .unit { display: inline-block; width: 50px; text-align: left; margin-left: 8px; font-size: 12px; color: #555; }
+        .checkbox-group { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+        .circle { display: inline-block; width: 20px; height: 20px; border: 2px solid #000; border-radius: 50%; vertical-align: middle; margin-right: 5px; }
+        
+        .footer {
+            font-size: 12px; color: #666; border-top: 1px solid #000; padding-top: 10px;
+            display: flex; justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        /* Bildschirm-Footer-Positionierung (für Ansicht) */
+        @media screen {
+            .footer { position: absolute; bottom: 20mm; left: 20mm; right: 20mm; }
+        }
+
+        /* Info-Seiten (Seite 2-4) */
+        .info-box {
+            background: #fdfdfd;
+            border: 1px solid #e5e5ea;
+            border-left: 5px solid var(--blue);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            /* Webkit-Hack für iPad: Verhindert Seitenumbruch innerhalb des Elements */
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-column-break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .info-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--dark);
+            text-transform: uppercase;
+        }
+        .info-text {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .info-highlight {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* DRUCK-LOGIK FÜR iPAD/SAFARI */
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background: white; padding: 0; margin: 0; display: block; }
+            
+            .a4-page { 
+                width: 100%; 
+                min-height: auto; 
+                height: auto !important; /* Safari zwingen, den Text fließen zu lassen */
+                padding: 0; 
+                margin: 0;
+                box-shadow: none; 
+                page-break-after: always;
+                break-after: page;
+                position: static !important; /* Verhindert Überlappungen */
+            }
+            .a4-page:last-child { 
+                page-break-after: auto; 
+                break-after: auto; 
+            }
+            
+            .footer { 
+                position: relative !important; /* Footer fließt natürlich ans Ende der Boxen */
+                bottom: auto; left: auto; right: auto;
+                margin-top: 30px; 
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="a4-page">
+    <h1>Vital-Check für Senioren</h1>
+    
+    <div class="patient-header">
+        <div>Patienten-ID / Name: <span class="input-line" style="width: 250px;"></span></div>
+        <div>Datum: <span class="input-line" style="width: 120px;"></span></div>
+    </div>
+
+    <div class="section-title">1. Basis-Checkpoints & Anamnese</div>
+    <table class="form-table">
+        <tr>
+            <td class="col-label">Körpergewicht & Größe</td>
+            <td class="col-input">
+                <div class="box"></div><span class="unit">kg</span>
+                <div class="box"></div><span class="unit">cm</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="col-label">Nikotin: Konsumjahre & Zigaretten/Tag</td>
+            <td class="col-input">
+                <div class="box"></div><span class="unit">Jahre</span>
+                <div class="box"></div><span class="unit">Stk/Tag</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="col-label">Jahre rauchfrei (falls Ex-Raucher)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">Jahre</span></td>
+        </tr>
+        <tr>
+            <td class="col-label">Polypharmazie (Einnahme von ≥ 5 Medikamenten)</td>
+            <td class="col-input">
+                <div class="checkbox-group">
+                    <div><span class="circle"></span> Ja</div><div><span class="circle"></span> Nein</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="col-label">Sturz- oder Stolperereignisse in der Vorgeschichte</td>
+            <td class="col-input">
+                <div class="checkbox-group">
+                    <div><span class="circle"></span> Ja</div><div><span class="circle"></span> Nein</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">2. Hämodynamik & Vitalparameter</div>
+    <table class="form-table">
+        <tr>
+            <td class="col-label">Blutdruck (Systolisch / Diastolisch)</td>
+            <td class="col-input">
+                <div class="box"></div><span class="unit">sys</span>
+                <div class="box"></div><span class="unit">dia</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="col-label">Sauerstoffsättigung (SpO2) & Ruhepuls</td>
+            <td class="col-input">
+                <div class="box"></div><span class="unit">%</span>
+                <div class="box"></div><span class="unit">bpm</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="col-label">Perfusions-Index (PI)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">Index</span></td>
+        </tr>
+        <tr>
+            <td class="col-label">Orthostase-Abfall (Systolischer Abfall b. Aufstehen)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">mmHg</span></td>
+        </tr>
+    </table>
+
+    <div class="section-title">3. Somatik & Kraftreserven</div>
+    <table class="form-table">
+        <tr>
+            <td class="col-label">Ganggeschwindigkeit (Zeit für 5 Meter)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">Sek.</span></td>
+        </tr>
+        <tr>
+            <td class="col-label">Fahrstabilität / TUG (Timed Up and Go)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">Sek.</span></td>
+        </tr>
+        <tr>
+            <td class="col-label">Aufsteh-Kraft (Chair Rise Test: 5x Aufstehen)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">Sek.</span></td>
+        </tr>
+        <tr>
+            <td class="col-label">Pack-An-Power (Handkraft-Messung)</td>
+            <td class="col-input"><div class="box box-large"></div><span class="unit">kg</span></td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <div>Untersucher (Signum): <span class="input-line" style="width: 150px; border-bottom: 1px dotted #000;"></span></div>
+        <div>Erfassungsbogen | Klinisches Assessment</div>
+    </div>
+</div>
+
+<div class="a4-page">
+    <h1>Einzigartige Diagnostik</h1>
+    <h2 style="margin-top:0;">Warum wir diese 17 Werte messen – Ihr Vital-Check im Detail</h2>
+    
+    <p>Herzlich willkommen zu Ihrem Vital-Check für Senioren. Die moderne Altersmedizin hat in den letzten Jahren einen Paradigmenwechsel vollzogen: Wir suchen heute nicht mehr nur nach Krankheiten, sondern wir messen aktiv Ihre <strong>biologische Reservekapazität</strong> und <strong>Resilienz</strong>. </p>
+    
+    <p>Unser innovatives Testverfahren erfasst 17 hochspezifische Parameter, die wie Zahnräder ineinandergreifen. Wir durchleuchten Ihr Herzkreislaufsystem, prüfen die Elastizität Ihrer Gefäße und messen Ihre muskulären Reserven. Ziel ist es, verborgene Schwachstellen aufzudecken, lange <em>bevor</em> sie zu einem Verlust Ihrer Selbstständigkeit führen. Jeder der folgenden Parameter ist beeinflussbar – wir zeigen Ihnen, wie.</p>
+
+    <h2>Säule 1: Basis-Werte & Vaskuläre Last</h2>
+    
+    <div class="info-box">
+        <div class="info-title">Body-Mass-Index (Das Kampfgewicht)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Das Verhältnis von Körpergewicht zu Körpergröße gibt uns einen präzisen Hinweis auf die metabolische und mechanische Last für Ihr Herz und Ihre Gelenke.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Ein zu hohes Gewicht verdoppelt das Risiko für Bluthochdruck und zwingt den Herzmuskel zu permanenter Mehrarbeit. Im Alter suchen wir die perfekte Balance: Ein leichter Puffer schützt bei Infekten, aber zu viel Gewicht in Kombination mit zu wenig Muskelmasse (sarkopene Adipositas) macht immobiler.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Pack-Years (Das Qualm-Konto)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Die lebenslange Tabakbelastung (berechnet aus Schachteln pro Tag mal Jahre) ist der wichtigste Einzelindikator für die Alterung Ihrer Gefäßinnenwände (Endothel).<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Hohe Werte bedeuten eine erhebliche Gefäßsteifigkeit. Das Gute: Die Natur ist verzeihend. Bereits 1 Jahr nach einem Rauchstopp halbiert sich das Herzinfarktrisiko. Der Körper beginnt ab dem ersten Tag ohne Rauch mit der Reparatur.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Polypharmazie & Sturz-Historie</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Die parallele Einnahme von 5 oder mehr Medikamenten sowie zurückliegende Stolper-Ereignisse.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Die Kombination vieler Medikamente (besonders Schlaf- und starke Blutdruckmittel) ist der stärkste unabhängige Auslöser für Schwindel und Stürze. Ein regelmäßiger, kritischer "Medikamenten-TÜV" durch den Arzt kann Sie vor fatalen Knochenbrüchen bewahren.
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>Patienten-Information (Seite 1/3)</div>
+        <div>Vital-Check für Senioren</div>
+    </div>
+</div>
+
+<div class="a4-page">
+    <h2 style="margin-top:0;">Säule 2: Hämodynamik (Ihr Herz-Kreislauf-Profil)</h2>
+    
+    <div class="info-box">
+        <div class="info-title">Blutdruck & Amplitude (Der Ader-Hammer)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Wir betrachten nicht nur den Standard-Blutdruck, sondern fokussieren uns auf die Pulsdruck-Amplitude (die Differenz zwischen dem oberen und unteren Wert).<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Eine große Amplitude (über 60 mmHg) zeigt uns an, dass Ihre Hauptschlagader (Aorta) an Elastizität verloren hat. Sie ist steif geworden. Dadurch schlagen die Druckwellen des Herzens ungebremst in Ihre sensiblen Organe (Gehirn, Nieren) ein. Durch spezielles Ausdauertraining können wir Ihre Gefäße wieder "weicher" machen.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Perfusions-Index (Das Durchblutungs-Radar)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Ein hochsensibler Sensor an Ihrem Finger misst das Verhältnis von pulsierendem zu konstantem Blutfluss in den feinsten Kapillaren Ihrer Körperperipherie.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Dieser Wert verrät uns die Qualität Ihrer Mikrozirkulation. Ein niedriger Wert warnt uns frühzeitig vor einer arteriellen Verschlusskrankheit ("Schaufensterkrankheit") oder einem drohenden Gefäßverschluss, noch bevor Sie Schmerzen beim Gehen spüren.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Sauerstoff-Sättigung & Ruhepuls (Der Taktgeber)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Wie viel Prozent Ihres Blutes mit lebenswichtigem Sauerstoff beladen sind und wie schnell Ihr Herz im Ruhezustand arbeitet.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Sauerstoff ist der Treibstoff für Ihr Gehirn. Fehlt er, sinkt die kognitive Wachsamkeit. Ein dauerhaft hoher Puls wiederum bedeutet Stress für den Herzmuskel – es ist, als würden Sie ein Auto ständig hochtourig im Leerlauf laufen lassen.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Orthostase-Abfall (Der Schwindel-Check)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Wir prüfen, wie schnell Ihr Blutdruck beim Aufstehen aus dem Sitzen reagiert und ob er gefährlich absackt.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Wenn das Blut beim Aufstehen in den Beinen versackt, fehlt es für wenige Sekunden im Gehirn. Die Folge: Schwindel und Ohnmacht. Das ist eine der häufigsten Ursachen für schwere Stürze am frühen Morgen oder beim nächtlichen Gang zur Toilette.
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>Patienten-Information (Seite 2/3)</div>
+        <div>Vital-Check für Senioren</div>
+    </div>
+</div>
+
+<div class="a4-page">
+    <h2 style="margin-top:0;">Säule 3: Somatik (Ihr Muskel- & Autonomie-Profil)</h2>
+    
+    <div class="info-box">
+        <div class="info-title">Handkraft-Messung (Die Pack-An-Power)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Mit einem medizinischen Dynamometer ermitteln wir Ihre exakte Griffstärke in Kilogramm.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Die Kraft Ihrer Hände ist kein isolierter Wert, sondern ein weltweit anerkannter Global-Marker für Ihre gesamte Körpermuskelmasse. Ein starker Abfall warnt vor dem gefährlichen Muskelschwund im Alter (Sarkopenie). Schwache Muskeln sind der Hauptgrund für den Verlust der Unabhängigkeit.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Chair-Rise-Test (Die Aufsteh-Kraft)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Wir stoppen die Zeit, die Sie benötigen, um fünfmal zügig ohne Einsatz der Arme von einem Stuhl aufzustehen.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Dieser Test beurteilt die funktionelle Kraft Ihrer Oberschenkel- und Hüftmuskulatur. Wer Kraft in den Beinen hat, kann Stürze im Alltag oft im letzten Bruchteil einer Sekunde abfangen. Es ist Ihre wichtigste Lebensversicherung für Mobilität.
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">TUG-Test (Die Fahrstabilität)</div>
+        <div class="info-text">
+            <span class="info-highlight">🔬 Was wir messen:</span> Der "Timed Up and Go" Test misst die Zeit für einen komplexen Bewegungsablauf: Aufstehen, 3 Meter gehen, umdrehen, zurückgehen und hinsetzen.<br><br>
+            <span class="info-highlight">💡 Warum das wichtig ist:</span> Dieser Wert prüft das perfekte Zusammenspiel Ihres Gehirns mit Ihren Muskeln (Koordination und Balance). Eine Zeit von über 12 Sekunden ist ein klares Warnsignal für ein massiv erhöhtes Sturzrisiko. Durch gezieltes Balance-Training können wir diese Reaktionszeit entscheidend verbessern.
+        </div>
+    </div>
+
+    <h2 style="margin-top:30px; border-bottom: none; text-align: center;">Die Auswertung: Ihr persönlicher Fahrplan</h2>
+    <p style="text-align: center; font-size: 15px; padding: 0 20px;">
+        Nachdem wir diese 17 Parameter erfasst haben, wertet unser System die Daten aus und identifiziert Ihre <strong>verborgenen Reserven</strong>. Sie erhalten im Anschluss einen detaillierten, ärztlichen Befundbericht. Gemeinsam erarbeiten wir dann einen maßgeschneiderten Aktionsplan, damit Sie Ihre Vitalität und Unabhängigkeit bis ins hohe Alter bewahren.
+    </p>
+    
+    <div style="text-align: center; font-weight: 800; font-size: 18px; margin-top: 20px; color: var(--blue);">
+        Ihre Autonomie in Ihren Händen.
+    </div>
+
+    <div class="footer">
+        <div>Patienten-Information (Seite 3/3)</div>
+        <div>Vital-Check für Senioren</div>
+    </div>
+</div>
+
+</body>
+</html>
