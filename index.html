@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gero-Check Ultimate v22</title>
+    <style>
+        :root { --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #1c1e21; --light-bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--light-bg); padding: 10px; color: #1c1e21; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 20px; font-weight: 800; }
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 15px; font-size: 13px; color: #8e8e93; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        label { font-weight: 600; font-size: 14px; flex: 1; }
+        input, select, textarea { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 15px; text-align: center; background: #fff; }
+        input[type="number"], select { width: 85px; }
+
+        /* Dialog-Buttons */
+        .main-btn { width: 100%; padding: 12px; border: 2px solid #000; border-radius: 15px; font-size: 14px; font-weight: 700; background: transparent; cursor: pointer; text-align: center; margin-bottom: 5px; }
+        .main-btn.selected { background: #e5e5ea; border-width: 3px; }
+        
+        /* Halbiertes SMART-Fenster */
+        .smart-box { display: none; padding: 6px; background: #fff; border-radius: 10px; margin-bottom: 10px; border: 1px dashed #000; }
+        .smart-btn { display: inline-block; padding: 6px 12px; border: 1px solid #000; border-radius: 20px; font-size: 11px; margin: 2px; cursor: pointer; font-weight: 600; }
+        .smart-btn.active { background: #000; color: #fff; }
+
+        .res-container { display: flex; gap: 10px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 800; border: 2px solid #000; font-size: 12px; }
+        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 16px; text-align: center; font-weight: 900; font-size: 24px; border: 3px solid #000; }
+        
+        .action-btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 20px; background: var(--blue); color: white; }
+        .btn-print { background: #fff !important; color: #000 !important; border: 2px solid #000 !important; margin-top: 30px; display: none; }
+
+        @media print {
+            .card, button, .group, h3, input, select { display: none !important; }
+            #print-area { display: block; width: 100%; }
+            .page { page-break-after: always; padding: 30px; min-height: 95vh; position: relative; font-size: 12px; }
+            h1 { border-bottom: 3px solid #000; padding-bottom: 5px; font-size: 22px; }
+            h2 { font-size: 16px; margin-top: 20px; background: #eee; padding: 5px; }
+            .box-print { border: 1px solid #000; padding: 12px; border-radius: 10px; margin: 10px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { text-align: left; padding: 6px; border-bottom: 1px solid #eee; }
+            .ampel-info { font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+        }
+        #print-area { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Gero-Check Ultimate v22</h2>
+    <div class="group"><label>Patient-ID / Zeichen</label><input type="text" id="p-name" placeholder="ID"></div>
+    
+    <h3>1. Ihre Basisdaten</h3>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="75"> / <input type="number" id="height" value="175"></div></div>
+    <div class="group"><label>Nikotin (Jahre / Zigg. Tag)</label><div><input type="number" id="nic-y" value="0"> / <input type="number" id="nic-c" value="0"></div></div>
+    <div class="group"><label>Jahre rauchfrei?</label><input type="number" id="nic-off" value="0"></div>
+    <div class="group"><label>Medikamente ≥ 5 / Sturz o. Stolp.</label><div><select id="poly"><option value="0">N</option><option value="1">J</option></select> / <select id="fall"><option value="0">N</option><option value="1">J</option></select></div></div>
+
+    <h3>2. Herz & Kreislauf</h3>
+    <div class="group"><label>Blutdruck syst / diast (mmHg)</label><div><input type="number" id="sys" value="130"> / <input type="number" id="dia" value="85"></div></div>
+    <div class="group"><label>Sauerstoff SpO2 / Puls</label><div><input type="number" id="spo2" value="96"> / <input type="number" id="hr" value="70"></div></div>
+    <div class="group"><label>PI / Orthostase-Abfall</label><div><input type="number" id="pi" step="0.1" value="1.5"> / <input type="number" id="rr-off" value="0"></div></div>
+
+    <h3>3. Kraft & Beweglichkeit</h3>
+    <div class="group"><label>Gang (5m) / TUG (s)</label><div><input type="number" id="walk" step="0.1" value="4.5"> / <input type="number" id="tug" step="0.1" value="9.5"></div></div>
+    <div class="group"><label>Aufstehen (s) / Handkraft (kg)</label><div><input type="number" id="chair" step="0.1" value="10.0"> / <input type="number" id="grip" value="35"></div></div>
+
+    <button class="action-btn" onclick="calculate()">Analyse & Fahrplan erstellen</button>
+
+    <div class="res-container">
+        <div id="resH" class="res-box">H-CHECK</div>
+        <div id="resM" class="res-box">M-CHECK</div>
+    </div>
+    <div id="total-vitality">VITALITÄT</div>
+
+    <div id="shop-window" style="display:none; margin-top:30px;">
+        <h2 style="color: var(--blue);">Ihre persönlichen Ziele</h2>
+        <div id="h-triage"><h3>Optionen: Herz & Kreislauf</h3><div id="h-grid"></div></div>
+        <div id="m-triage"><h3>Optionen: Kraft & Sicherheit</h3><div id="m-grid"></div></div>
+        <div id="v-triage"><h3>Optionen: Lebensfreude & Geist</h3><div id="v-grid"></div></div>
+        <textarea id="p-comment" rows="3" style="width:100%; border-radius:10px; padding:10px; margin-top:20px;" placeholder="Ihre persönliche Notiz..."></textarea>
+        <button class="action-btn btn-print" id="btn-print" onclick="prepareAndPrint()">Bericht für Sie drucken</button>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="page">
+        <h1>Mein Vitalitäts-Fahrplan zur Autonomie</h1>
+        <p id="pat-meta-top"></p>
+
+        <h2>1. Meine aktuellen Messwerte</h2>
+        <table id="input-data-table">
+            </table>
+
+        <h2>2. Meine Vitalitäts-Checks</h2>
+        <div id="checks-explanation">
+            </div>
+
+        <h2>3. Meine Risiko-Indikatoren</h2>
+        <div class="box-print" id="risk-parameters">
+            </div>
+
+        <h2>4. Mein Aktionsplan (Meine SMART-Ziele)</h2>
+        <div id="pat-goals-print"></div>
+
+        <div class="box-print">
+            <strong>Meine persönliche Vereinbarung:</strong><br>
+            <span id="print-comment-final"></span>
+        </div>
+
+        <h2>5. Wissenswertes für Ihren Alltag</h2>
+        <div id="expert-tips-print" style="font-size: 11px; line-height: 1.4;">
+            </div>
+
+        <div class="disclaimer">Dies ist Ihr persönlicher Fahrplan. Er ersetzt nicht die regelmäßige ärztliche Kontrolle. Stand: <span class="d-now"></span></div>
+    </div>
+</div>
+
+<script>
+const OFFERS = {
+    h: [
+        {t: 'Alkohol (Harm Reduction)', s: ['Heute kein Schnaps n. Bier', '2 alk-freie Tage / Woche', '2. Glas durch Wasser ersetzen', 'Volume reduzieren', 'Nur zum Essen trinken']},
+        {t: 'Rauchstopp-Initiative', s: ['Stopp-Datum fixiert', 'Nikotinersatz nutzen', 'Reduktion um 5 Zigg/Tag', 'Beratung kontaktieren']},
+        {t: 'Herz-Gesunde Ernährung', s: ['Max 1 TL Salz / Tag', 'Viel Gemüse & Olivenöl', 'Fisch statt Fleisch', 'DASH-Prinzip anwenden']},
+        {t: 'Bewegung (Rad/Wandern)', s: ['3x 45 Min / Woche', 'Täglich 20 Min zügig', '150 Min / Woche Ziel', 'Schwimmen 2x / Woche']},
+        {t: 'Gewicht managen', s: ['-3kg bis Kontrolle', '-5kg langfristig', 'Keine Süßgetränke', 'Abends Kohlenhydrate ↓']}
+    ],
+    m: [
+        {t: 'Kraft (Sarkopenie-Schutz)', s: ['3x10 Wdh. Stuhlkante', 'Widerstandsbänder 2x/Wo', 'Treppe statt Aufzug', 'Fitness-Zirkel']},
+        {t: 'Balance (Sturz-Schutz)', s: ['Einbeinstand b. Zähneputzen', 'Tai Chi Kurs', 'Balance-Board täglich', 'Otago-Übungsprogramm']},
+        {t: 'Protein (1.5g / kg KG)', s: ['25g Eiweiß pro Mahlzeit', 'Molkeprotein n. Belastung', 'Quark/Eier morgens', 'Leucin-Zufuhr prüfen']},
+        {t: 'Sicher Wohnen', s: ['Teppichfallen weg', 'Haltegriffe Bad', 'Licht nachts optimieren', 'Barrierefreiheit']},
+        {t: 'Vitamin D & Kreatin', s: ['Vitamin D (800-2000 IE)', 'Kreatin 3-5g tgl.', 'Calcium über Nahrung', 'Check Ferritin/B12']}
+    ],
+    v: [
+        {t: 'Gehirn-Fitness (Kognition)', s: ['Rechnen beim Gehen', 'Gedächtnis-Apps nutzen', 'Skat/Schach spielen', 'Instrument reaktivieren', 'Sprachkurs / Lesen']},
+        {t: 'Achtsamkeit & Stille', s: ['10 Min Stille täglich', 'Body-Scan vor Schlaf', 'Dankbarkeits-Tagebuch', 'Atem-Fokus b. Stress']},
+        {t: 'Soziale Teilhabe', s: ['Senioren-Treff / Café', 'Familien-Call wöchentlich', 'Ehrenamt / Mentoring', 'Vereins-Treffen']},
+        {t: 'Schlaf-Qualität', s: ['Fixe Aufstehzeiten', 'Kein Koffein n. 14 Uhr', 'Digital Detox n. 20 Uhr', 'Morgenlicht nutzen']},
+        {t: 'Hör- & Sehcheck', s: ['Termin Augenarzt', 'Akustiker-Check', 'Hilfsmittel-Check', 'Beleuchtung prüfen']}
+    ]
+};
+
+const PATIENT_TIPS = `
+    <strong>Lebensstil & Herz:</strong> Raucherentwöhnung ist die wirksamste Einzelmaßnahme. Das Risiko sinkt bereits nach 1–2 Jahren deutlich. Körperliche Aktivität (150 Min. moderate Ausdauer pro Woche) reduziert das Sterblichkeitsrisiko um bis zu 35 %. 
+    Gewichtsverlust von 5–10 % verbessert messbar Blutdruck und Blutzucker. Die mediterrane Diät (viel Gemüse, Hülsenfrüchte, Olivenöl, Fisch, Nüsse) ist am stärksten belegt. Alkohol: Es gibt keinen gesundheitlich schützenden Effekt – je weniger, desto besser. Chronischer Schlafmangel (<6 h) belastet das Herz. 
+    <br><br><strong>Kraft & Standfestigkeit:</strong> Krafttraining ist das beste Mittel gegen Muskelschwund, auch über 90 Jahre hinaus. Der Widerstand muss regelmäßig gesteigert werden (progressiv). 2–3 Einheiten pro Woche sind ideal. Gleichgewichtstraining (z.B. Tai Chi) senkt die Sturzhäufigkeit um ca. 35 %. 
+    Ältere Menschen benötigen mehr Eiweiß (mind. 1,2–1,6 g/kg Körpergewicht). Verteilen Sie Protein über den Tag (ca. 25–30 g pro Mahlzeit). Vitamin D (800–2000 IE) ist für die Muskelfunktion essentiell. Über 50 % der Stürze passieren zu Hause (Stolperfallen entfernen!).
+    <br><br><strong>Geist & Resilienz:</strong> Ausdauertraining verbessert Vitalität und Stimmung durch bessere Gehirndurchblutung. Geistige Aktivität (Lesen, Musizieren, Fremdsprachen) verzögert kognitiven Abbau. Soziale Einbindung ist einer der stärksten Schutzfaktoren – Isolation schadet der Gesundheit massiv. 
+    Naturkontakt (Parks, Wald) senkt Stresshormone und stärkt das Immunsystem. Schlafhygiene (kühles Zimmer, kein Bildschirm vor dem Schlafen) ist die Basis für gute Vigilanz.
+`;
+
+function calculate() {
+    const d = {
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value/100,
+        sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value,
+        o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        pi: +document.getElementById('pi').value, rrO: +document.getElementById('rr-off').value,
+        wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value,
+        ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value,
+        poly: +document.getElementById('poly').value, fall: +document.getElementById('fall').value,
+        ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, no: +document.getElementById('nic-off').value
+    };
+    const bmi = d.w / (d.h * d.h);
+    const amp = d.sys - d.dia;
+    let py = (d.ny * d.nc) / 20; if(d.no > 7) py = 0; else if(d.no >= 3) py /= 2;
+
+    let sH = 0; if(d.sys>=120 && d.sys<=139) sH+=2; else if(d.sys>=100 && d.sys<=159) sH+=1;
+    if(d.o2>=95) sH+=2; if(d.hr>=60 && d.hr<=85) sH+=2; if(d.pi>=1.5) sH+=2; if(d.rrO<10) sH+=2;
+    if(amp > 60 || d.poly == 1 || py > 15) sH = Math.max(0, sH-1);
+
+    let sM = 0; if(d.wa<4.8) sM+=2; if(d.tg<10) sM+=2; if(d.ch<11) sM+=2;
+    if(d.gr>=26) sM+=2; if(bmi>=22) sM+=2; if(d.fall == 0) sM+=2;
+
+    const t = sH + sM;
+    const isTop = (t >= 20);
+
+    const hC = sH>=8?'#34c759':sH>=6?'#ffcc00':'#ff3b30';
+    const mC = sM>=10?'#34c759':sM>=7?'#ffcc00':'#ff3b30';
+    let vC = isTop?'#34c759':t>=15?'#ffcc00':'#ff3b30';
+
+    document.getElementById('resH').style.background = hC; document.getElementById('resH').innerHTML = `H-CHECK: ${sH}/10`;
+    document.getElementById('resM').style.background = mC; document.getElementById('resM').innerHTML = `M-CHECK: ${sM}/12`;
+    const bv = document.getElementById('total-vitality'); bv.style.background = vC;
+    bv.innerHTML = `VITALITÄT: ${isTop?'TOP':t>=15?'LABIL':'RISIKO'} (${t}/22)`;
+
+    document.getElementById('shop-window').style.display = 'block';
+    renderGrid('h-grid', OFFERS.h); renderGrid('m-grid', OFFERS.m); renderGrid('v-grid', OFFERS.v);
+    
+    document.getElementById('btn-print').style.display = 'block';
+    window.scrollTo({top: document.getElementById('total-vitality').offsetTop, behavior: 'smooth'});
+}
+
+function renderGrid(cid, list) {
+    const container = document.getElementById(cid); container.innerHTML = "";
+    list.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<button class="main-btn" onclick="this.classList.toggle('selected'); toggleSmart('${cid}-${idx}')">${item.t}</button>
+                         <div class="smart-box" id="smart-${cid}-${idx}">
+                            ${item.s.map(s => `<span class="smart-btn" onclick="selectSmart(this)">${s}</span>`).join('')}
+                         </div>`;
+        container.appendChild(div);
+    });
+}
+
+function toggleSmart(id) { const el = document.getElementById('smart-'+id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+function selectSmart(span) { span.parentElement.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active')); span.classList.add('active'); }
+
+function prepareAndPrint() {
+    const id = document.getElementById('p-name').value || "ID";
+    const date = new Date().toLocaleDateString('de-DE');
+    const d = { 
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value, sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value, o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value, wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value, gr: +document.getElementById('grip').value, ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, no: +document.getElementById('nic-off').value
+    };
+    const bmi = (d.w / ((d.h/100)**2)).toFixed(1);
+    let py = (d.ny * d.nc) / 20; if(d.no > 7) py = 0; else if(d.no >= 3) py /= 2;
+    const amp = d.sys - d.dia;
+
+    document.getElementById('pat-meta-top').innerHTML = `<strong>ID:</strong> ${id} | <strong>Datum:</strong> ${date}`;
+    document.querySelectorAll('.d-now').forEach(el => el.innerText = date);
+
+    // Tabelle mit Eingangswerten
+    document.getElementById('input-data-table').innerHTML = `
+        <tr><th>Körperwerte</th><td>Gewicht: ${d.w} kg | Größe: ${d.h} cm</td></tr>
+        <tr><th>Kreislauf</th><td>Blutdruck: ${d.sys}/${d.dia} mmHg | Puls: ${d.hr} bpm | O2: ${d.o2}%</td></tr>
+        <tr><th>Kraft & Zeit</th><td>Handkraft: ${d.gr} kg | Gang (5m): ${d.wa}s | Aufstehen: ${document.getElementById('chair').value}s</td></tr>
+    `;
+
+    // Checks Interpretation
+    const hColor = document.getElementById('resH').style.background;
+    const mColor = document.getElementById('resM').style.background;
+    const vColor = document.getElementById('total-vitality').style.background;
+
+    const explain = (color, label) => {
+        let text = color.includes('34c759') ? "<b>Robust & Sicher:</b> Alles bestens. Erhalten Sie diesen Zustand!" :
+                   color.includes('ffcc00') ? "<b>Labil & Achtsam:</b> Kleine Änderungen können Großes bewirken." :
+                                            "<b>Handlungsbedarf:</b> Hier sollten wir gezielt gegensteuern.";
+        return `<p><span class="ampel-info" style="background:${color}">${label}</span> ${text}</p>`;
+    };
+
+    document.getElementById('checks-explanation').innerHTML = 
+        explain(hColor, "Herz-Check") + explain(mColor, "Kraft-Check") + explain(vColor, "Gesamt-Vitalität");
+
+    // Risikoparameter
+    document.getElementById('risk-parameters').innerHTML = `
+        BMI: ${bmi} (${bmi < 22 ? 'Achtung: Erhöhter Energiebedarf' : bmi > 26 ? 'Gewichtsmanagement sinnvoll' : 'Normalbereich'}) | 
+        Nikotinlast: ${py.toFixed(1)} Pack-Years | Blutdruck-Amplitude: ${amp} mmHg
+    `;
+
+    // Goals
+    let goalsHtml = "";
+    document.querySelectorAll('.smart-btn.active').forEach(btn => {
+        const title = btn.parentElement.previousElementSibling.innerText;
+        goalsHtml += `<div class="box-print"><strong>${title}</strong><br>Mein SMART-Ziel: ${btn.innerText}</div>`;
+    });
+    document.getElementById('pat-goals-print').innerHTML = goalsHtml || "<p>Keine spezifischen Ziele markiert.</p>";
+    document.getElementById('print-comment-final').innerText = document.getElementById('p-comment').value;
+    document.getElementById('expert-tips-print').innerHTML = PATIENT_TIPS;
+
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(() => { window.print(); document.getElementById('print-area').style.display = 'none'; }, 200);
+}
+</script>
+</body>
+</html>
