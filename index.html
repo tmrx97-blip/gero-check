@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vital-Check für Senioren v38</title>
+    <style>
+        :root { --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #1c1e21; --light-bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--light-bg); padding: 10px; color: #1c1e21; margin: 0; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 15px; font-weight: 800; }
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 15px; font-size: 13px; color: #8e8e93; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        label { font-weight: 600; font-size: 14px; flex: 1; }
+        input, select, textarea { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 15px; text-align: center; background: #fff; }
+        input[type="number"], select { width: 85px; }
+        .main-btn { width: 100%; padding: 10px; border: 2px solid #000; border-radius: 12px; font-size: 13px; font-weight: 700; background: transparent; cursor: pointer; text-align: center; margin-bottom: 5px; }
+        .main-btn.selected { background: #e5e5ea; border-width: 3px; }
+        .smart-box { display: none; padding: 4px; background: #fff; border-radius: 10px; margin-bottom: 8px; border: 1px dashed #000; }
+        .smart-btn { display: inline-block; padding: 5px 12px; border: 1px solid #000; border-radius: 20px; font-size: 11px; margin: 3px; cursor: pointer; font-weight: 600; }
+        .smart-btn.active { background: #000; color: #fff; }
+        .res-container { display: flex; gap: 8px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 800; border: 2px solid #000; font-size: 11px; }
+        #total-vitality { margin-top: 15px; padding: 20px; border-radius: 16px; text-align: center; font-weight: 900; font-size: 22px; border: 3px solid #000; }
+        .action-btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 20px; background: var(--blue); color: white; }
+        .final-print-trigger { background: var(--gray) !important; margin-top: 40px; border: 4px solid var(--blue) !important; }
+        
+        #print-area { display: none; }
+        
+        /* ----------------------------------------------------
+           DRUCK-LOGIK FÜR iPAD / SAFARI (WEBKIT-PANZER)
+           ---------------------------------------------------- */
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background: white; padding: 0; margin: 0; display: block; }
+            .card, button, .group, h3, input, select, textarea { display: none !important; }
+            #print-area { display: block !important; width: 100%; }
+            
+            .page { 
+                width: 100%; 
+                height: auto !important; 
+                padding: 0; margin: 0;
+                font-size: 11px; line-height: 1.5; color: #000;
+                position: static !important;
+            }
+            
+            h1 { border-bottom: 4px solid #000; padding-bottom: 10px; font-size: 20px; text-transform: uppercase; margin-bottom: 15px; }
+            h2 { font-size: 14px; background: #f2f2f7; padding: 8px; margin-top: 25px; margin-bottom: 15px; border-radius: 5px; border-left: 8px solid var(--blue); page-break-after: avoid; break-after: avoid; }
+            
+            /* WEBKIT HACK: Parameter-Boxen unzerstörbar machen */
+            .param-row { 
+                margin-bottom: 15px; 
+                border-bottom: 1px solid #eee; 
+                padding-bottom: 10px; 
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                -webkit-column-break-inside: avoid;
+                display: inline-block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .param-title { font-weight: bold; font-size: 12.5px; }
+            .val-red { color: #d32f2f; font-weight: 900; font-size: 14px; }
+            .val-normal { color: #34c759; font-weight: bold; font-size: 12px; }
+            .param-analysis { margin-top: 8px; padding: 10px; background: #fff5f5; border-left: 4px solid #d32f2f; font-size: 10.5px; border-radius: 0 4px 4px 0; }
+            .param-ok { margin-top: 4px; font-size: 10.5px; color: #444; font-style: italic; }
+            
+            /* WEBKIT HACK: Auch normale Boxen & Würdigung schützen */
+            .box-print { 
+                border: 1px solid #000; 
+                padding: 12px; 
+                border-radius: 8px; 
+                margin: 10px 0; 
+                background: #fff; 
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                -webkit-column-break-inside: avoid;
+                display: inline-block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .highlight-goal { color: var(--blue); font-weight: bold; margin-bottom: 4px; display: block; }
+            
+            .disclaimer {
+                margin-top: 30px; 
+                border-top: 2px solid #000; 
+                padding-top: 10px; 
+                font-weight: bold; 
+                text-align: center;
+                page-break-inside: avoid !important;
+                display: inline-block;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Vital-Check für Senioren</h2>
+    <div class="group"><label>Patient-ID / Handzeichen</label><input type="text" id="p-name" placeholder="ID"></div>
+    
+    <h3>1. Basis-Checkpoints</h3>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="95"> / <input type="number" id="height" value="170"></div></div>
+    <div class="group"><label>Nikotin (Jahre / Zigg. Tag)</label><div><input type="number" id="nic-y" value="0"> / <input type="number" id="nic-c" value="0"></div></div>
+    <div class="group"><label>Jahre rauchfrei?</label><input type="number" id="nic-off" value="0"></div>
+    <div class="group"><label>Medikamente ≥ 5 / Sturz o. Stolp.</label><div><select id="poly"><option value="0">N</option><option value="1">J</option></select> / <select id="fall"><option value="0">N</option><option value="1">J</option></select></div></div>
+
+    <h3>2. Hämodynamik-Checkpoints</h3>
+    <div class="group"><label>RR syst / diast (mmHg)</label><div><input type="number" id="sys" value="130"> / <input type="number" id="dia" value="85"></div></div>
+    <div class="group"><label>O2 SpO2 (%) / Puls (bpm)</label><div><input type="number" id="spo2" value="96"> / <input type="number" id="hr" value="70"></div></div>
+    <div class="group"><label>PI / Orthostase-Abfall</label><div><input type="number" id="pi" step="0.1" value="1.5"> / <input type="number" id="rr-off" value="0"></div></div>
+
+    <h3>3. Funktions-Checkpoints</h3>
+    <div class="group"><label>Gang (5m) / TUG (s)</label><div><input type="number" id="walk" step="0.1" value="4.5"> / <input type="number" id="tug" step="0.1" value="9.5"></div></div>
+    <div class="group"><label>Aufstehen (s) / Handkraft (kg)</label><div><input type="number" id="chair" step="0.1" value="10.0"> / <input type="number" id="grip" value="35"></div></div>
+
+    <button class="action-btn" onclick="calculate()">Analyse & Triage starten</button>
+
+    <div class="res-container"><div id="resH" class="res-box">H-STATUS</div><div id="resM" class="res-box">M-STATUS</div></div>
+    <div id="total-vitality">VITAL-INDEX</div>
+
+    <div id="shop-window" style="display:none; margin-top:25px;">
+        <h2 style="color: var(--blue);">Therapie-Schaufenster (SMART)</h2>
+        <div id="h-grid-box"><h3>A: Herz & Gefäß-Reserve</h3><div id="h-grid"></div></div>
+        <div id="m-grid-box"><h3>B: Muskeln & Sicherheit</h3><div id="m-grid"></div></div>
+        <div id="v-grid-box"><h3>C: Resilienz & Vitalität</h3><div id="v-grid"></div></div>
+        
+        <h3>Zusammenfassende Würdigung (Freitext)</h3>
+        <textarea id="p-comment" rows="4" style="width:100%; border-radius:10px; padding:15px;" placeholder="Ihre ergänzende Einschätzung... (Der Algorithmus erstellt zusätzlich einen Text)"></textarea>
+        
+        <button class="action-btn final-print-trigger" onclick="prepareAndPrint()">GUTACHTEN GENERIEREN & DRUCKEN</button>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="page">
+        <h1>Vital-Check für Senioren: Befundbericht</h1>
+        <p id="pat-meta-top" style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;"></p>
+
+        <h2>1. Verborgene Reserven heben – Parameterbezogene Analyse</h2>
+        <div id="dynamic-parameters-list"></div>
+
+        <h2>2. Zusammenfassende Würdigung & Strategische Priorität</h2>
+        <div class="box-print" style="background: #f9f9fb; border-left: 8px solid var(--blue);">
+            <p id="auto-narrative-text"></p>
+            <p id="manual-expert-text" style="font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;"></p>
+            <div id="prognostic-triad" style="margin-top: 15px;"></div>
+            <p id="final-closing-chord" style="margin-top: 20px; font-weight: 900; text-align: center; font-size: 13px; color: var(--blue);"></p>
+        </div>
+
+        <h2>3. Individueller Therapie-Fahrplan (SMART-Ziele)</h2>
+        <div id="pat-goals-print"></div>
+
+        <div class="disclaimer" style="text-align: center;">
+            Vital-Check für Senioren | Stand: <span class="d-now"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+// OFFERS - 3 Kategorien x 8 Items x 5 distinkte Optionen
+const OFFERS = {
+    h: [{t:'Gewicht (Vaskuläre Last)', s:['-3kg bis Kontrolle','-5kg in 6 Monaten','Keine Süßgetränke','Abends Kohlenhydrate ↓','Portionsgröße reduzieren']},{t:'Rauchstopp (Gefäßschutz)', s:['Stopp-Datum fixiert','Nikotinersatz starten','Reduktion 5 Zigg/Tag','Beratung vereinbart','Rauchfreie Wohnung']},{t:'Ausdauer (Kardio)', s:['Wandern 3x45 Min','Rad 30 Min tgl.','150 Min Gehen/Wo','Schwimmen 2x/Wo','Heimtrainer 20 Min']},{t:'Alkohol (Harm Reduction)', s:['Kein Schnaps n. Bier','2 alk-freie Tage/Wo','Bier durch Wasser ersetzen','Volumen halbieren','Nur zum Essen']}, {t:'Blutdruck (DASH-Kost)', s:['Max 1 TL Salz','5 Port. Obst/Gemüse','Vollkorn-Fokus','Kräuter statt Salz','Olivenöl-Konzept']}, {t:'Schlaf (Herz)', s:['7-8 Std Schlaf','Kein Koffein n. 14h','Kein TV n. 20h','Morgenlicht nutzen','Apnoe Check']}, {t:'Stress', s:['10 Min Stille','Atem-Fokus','Body-Scan','Digital Detox','Waldbaden']}, {t:'Trinken', s:['1.5L fix','Glas Wasser z. Essen','Protokoll führen','Vormittag 1L','Zitronenwasser']}],
+    m: [{t:'Kraft (Sarkopenie)', s:['3x10 Stuhlkante','Bänder 2x/Wo','Treppe statt Lift','Kraftzirkel','Kniebeugen tgl.']},{t:'Balance (Sturzstopp)', s:['Einbeinstand tgl.','Tai Chi Kurs','Balance-Board','Otago-Programm','Ferse-zu-Zeh-Gang']},{t:'Protein (Zufuhr)', s:['25g pro Mahlzeit','Molkeprotein n. Sport','Ei/Quark morgens','Hülsenfrüchte','Protein-Abendshake']},{t:'Wohnraum-Sicherheit', s:['Teppiche entfernen','Haltegriffe Bad','Licht nachts optim.','Kabelkanäle legen','Ergo-Hausbesuch']}, {t:'Vitamin D/Kreatin', s:['Vitamin D tgl.','Kreatin 3g tgl.','Calcium Nahrung','B12 Check','Nierencheck']}, {t:'Hör/Sehcheck', s:['Augenarzt-Termin','Akustiker-Hörtest','Brillenstärke prüfen','Geräte-Revision','Beleuchtung +']}, {t:'Fuß/Schuh', s:['Fußpflege','Feste Schuhe','Keine Schlappen','Einlagen Check','Nagelpilz-Tx']}, {t:'Hilfsmittel', s:['Rollator-Check','Gehstock-Training','Bremstest tgl.','Sicherheitstrain.','Akzeptanz-Dialog']}],
+    v: [{t:'Gehirn-Fitness', s:['Rechnen b. Gehen','Gedächtnis-Apps','Skat/Schach','Instrument üben','Lesekreis','Rückwärtsbuchst.'], note:true},{t:'Achtsamkeit', s:['Meditation tgl.','Dankbarkeitstagebuch','5-4-3-2-1 Methode','Waldbaden','Genusstraining'], note:true},{t:'Teilhabe', s:['Senioren-Treff','Familien-Call','Ehrenamt','Vereinstreffen','Frühstück Freunde']},{t:'Schlafhygiene', s:['Aufstehzeit fix','Morgenlicht','Kein TV Bett','Abendritual','Cool-down 19h']}, {t:'Naturkontakt', s:['Waldgang Wo.','Gartenarbeit','Park-Runde tgl.','Balkon-Natur','Vogelbeobachtung']}, {t:'Sinnstiftung', s:['Lesepate','Tafel-Mitarbeit','Nachbarschaftshilfe','Gartenpate','Enkel-Tag']}, {t:'KVT-I Schlaf', s:['Schlaf-Tagebuch','Bett-Restriktion','Entspannungs-Audio','KVT-I App','Instruktion']}, {t:'Schmerz-Mgmt', s:['Physio Fokus','Jacobson','Wärme/Kälte','TENS','Med-Review']}]
+};
+
+function calculate() {
+    const d = {
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value/100,
+        sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value,
+        o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        pi: +document.getElementById('pi').value, rrO: +document.getElementById('rr-off').value,
+        wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value,
+        ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value,
+        poly: +document.getElementById('poly').value, fall: +document.getElementById('fall').value,
+        ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, no: +document.getElementById('nic-off').value
+    };
+    const bmi = d.w / (d.h * d.h);
+    const amp = d.sys - d.dia;
+    let py = (d.ny * d.nc) / 20; if(d.no > 7) py = 0; else if(d.no >= 3) py /= 2;
+
+    let sH = 0; if(d.sys>=120 && d.sys<=139) sH+=2; else if(d.sys>=100 && d.sys<=159) sH+=1;
+    if(d.o2>=95) sH+=2; if(d.hr>=60 && d.hr<=85) sH+=2; if(d.pi>=1.4) sH+=2;
+    if(d.rrO > 20) sH -= 3;
+
+    let sM = 0; if(d.wa<4.8) sM+=2; if(d.tg<10) sM+=2; if(d.ch<11) sM+=2;
+    if(d.gr>=26) sM+=2; if(bmi>=22) sM+=2; if(d.fall == 0) sM+=2;
+
+    let statusH = sH >= 8 ? 'green' : sH >= 6 ? 'yellow' : 'red';
+    let statusM = sM >= 10 ? 'green' : sM >= 7 ? 'yellow' : 'red';
+    let statusV = (sH + sM) >= 20 ? 'green' : (sH + sM) >= 15 ? 'yellow' : 'red';
+
+    if(bmi > 30 || py > 20 || d.poly == 1 || amp > 60 || d.fall == 1 || d.tg > 15) {
+        if(statusH === 'green') statusH = 'yellow'; if(statusM === 'green') statusM = 'yellow'; if(statusV === 'green') statusV = 'yellow';
+    }
+    if(bmi > 35 || py > 40 || d.tg > 20) { statusH = 'red'; statusM = 'red'; statusV = 'red'; }
+    if(bmi < 22 && d.gr < 26) statusM = 'red';
+
+    const colors = { green: '#34c759', yellow: '#ffcc00', red: '#ff3b30' };
+    document.getElementById('resH').style.background = colors[statusH];
+    document.getElementById('resM').style.background = colors[statusM];
+    const bv = document.getElementById('total-vitality'); bv.style.background = colors[statusV];
+    bv.innerHTML = `VITAL-INDEX: ${statusV.toUpperCase()} (${sH+sM}/22)`;
+
+    document.getElementById('shop-window').style.display = 'block';
+    renderGrid('h-grid', OFFERS.h); renderGrid('m-grid', OFFERS.m); renderGrid('v-grid', OFFERS.v);
+    window.scrollTo({top: document.getElementById('total-vitality').offsetTop, behavior: 'smooth'});
+}
+
+function renderGrid(cid, list) {
+    const container = document.getElementById(cid); container.innerHTML = "";
+    list.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<button class="main-btn" onclick="this.classList.toggle('selected'); toggleSmart('${cid}-${idx}')">${item.t}</button>
+                         <div class="smart-box" id="smart-${cid}-${idx}">${item.s.map(s => `<span class="smart-btn" onclick="selectSmart(this)">${s}</span>`).join('')}</div>`;
+        container.appendChild(div);
+    });
+}
+function toggleSmart(id) { const el = document.getElementById('smart-'+id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+function selectSmart(span) { span.parentElement.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active')); span.classList.add('active'); }
+
+function prepareAndPrint() {
+    const d = { 
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value, sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value, pi: +document.getElementById('pi').value, ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, gr: +document.getElementById('grip').value, tg: +document.getElementById('tug').value, spo2: +document.getElementById('spo2').value, ch: +document.getElementById('chair').value, rro: +document.getElementById('rr-off').value, walk: +document.getElementById('walk').value, fall: +document.getElementById('fall').value, hr: +document.getElementById('hr').value, poly: +document.getElementById('poly').value
+    };
+    const bmi = (d.w / ((d.h/100)**2)).toFixed(1);
+    const py = (d.ny * d.nc) / 20;
+    const amp = d.sys - d.dia;
+
+    document.getElementById('pat-meta-top').innerHTML = `<strong>Patienten-ID:</strong> ${document.getElementById('p-name').value || 'Patient'} | <strong>Datum:</strong> ${new Date().toLocaleDateString('de-DE')} | <strong>Status:</strong> Ärztlich validiert`;
+    document.querySelectorAll('.d-now').forEach(el => el.innerText = new Date().toLocaleDateString('de-DE'));
+
+    const params = [
+        {
+            title: 'Vaskuläre Last (BMI)', val: bmi, unit: '', isRed: bmi >= 30,
+            norm: 'Der BMI zeigt ein ausgewogenes Verhältnis. Ihr Herz arbeitet ohne mechanische Überlastung.',
+            analysis: `<strong>Bewertung:</strong> Adipositas. Im Alter ambivalent zu bewerten – der sogenannte „Obesity Paradox” macht pauschale Empfehlungen schwierig. Dennoch erhöht dieser BMI die Herzkreislaufbelastung, fördert Entzündungen und beeinträchtigt Ihre Mobilität.<br><strong>Wo liegen die Reserven?</strong> Schon 5–8 % Gewichtsverlust verbessern messbar den Blutdruck, die Insulinresistenz und Gelenkbelastung. Wichtigste Ansätze: Proteinreiche Ernährung (1,2–1,6 g/kg), moderates Kaloriendefizit und zwingend begleitendes Krafttraining, um keinen Muskelabbau zu riskieren.`
+        },
+        {
+            title: 'Blutdruck (Systole / Diastole)', val: `${d.sys}/${d.dia}`, unit: 'mmHg', isRed: d.sys > 140 || d.dia > 90,
+            norm: 'Ihr Blutdruck liegt in einem organschonenden Bereich.',
+            analysis: `<strong>Bewertung:</strong> Systolische Hypertonie (>140 mmHg) ist der wichtigste behandelbare Risikofaktor für Herzinfarkt, Herzinsuffizienz und Schlaganfall.<br><strong>Wo liegen die Reserven?</strong> Eine Kombination aus Ausdauertraining, Kochsalzreduktion (<5 g/Tag, DASH-Diät) und mediterraner Kost senkt den Druck messbar. Falls nötig, verbessern ACE-Hemmer oder Sartane zusätzlich die Elastizität der Gefäße.`
+        },
+        {
+            title: 'Nikotinlast (Pack-Years)', val: py.toFixed(1), unit: 'PY', isRed: py > 0,
+            norm: 'Ein rauchfreies Leben schützt die Innenauskleidung Ihrer Gefäße perfekt.',
+            analysis: `<strong>Bewertung:</strong> ${py.toFixed(1)} Pack-Years bedeuten eine erhebliche kumulative Tabakexposition. Die über Jahrzehnte aufgebauten Gefäßschäden sind nicht vollständig, aber teilweise reversibel.<br><strong>Wo liegen die Reserven?</strong> Falls noch aktiv geraucht wird: Nach 1 Jahr Rauchstopp sinkt das KHK-Risiko auf die Hälfte! Falls bereits rauchfrei: Die Reserven liegen in der Kompensation der Folgeschäden durch konsequente Blutdrucktherapie und regelmäßiges Ausdauertraining.`
+        },
+        {
+            title: 'Ader-Hammer (Amplitude)', val: amp, unit: 'mmHg', isRed: amp > 60,
+            norm: 'Eine normale Amplitude (unter 60 mmHg) zeigt intakte, weiche Gefäße.',
+            analysis: `<strong>Bewertung:</strong> Klar pathologisch. Ein Pulsdruck von ${amp} mmHg zeigt erhebliche arterielle Steifigkeit. Ihre Aorta und großen Gefäße haben ihre Pufferfunktion verloren, was die kardiale Nachlast stark erhöht.<br><strong>Wo liegen die Reserven?</strong> Gefäßsteifigkeit ist modulierbar. Ausdauertraining (4–5×/Woche) ist die einzige Intervention mit nachgewiesener Wirkung auf die Gefäßelastizität. Nitratreiche Ernährung (z.B. Rote Bete) erhöht zudem die Gefäßentspannung.`
+        },
+        {
+            title: 'Durchblutungs-Radar (PI)', val: d.pi, unit: '', isRed: d.pi < 1.5,
+            norm: 'Ein Wert ab 1.5 beweist eine exzellente Durchblutung bis in die feinsten Kapillaren.',
+            analysis: `<strong>Bewertung:</strong> Pathologisch niedrig. Ein PI von ${d.pi} deutet auf eine eingeschränkte periphere Mikrozirkulation und reduzierte Kapillarversorgung hin.<br><strong>Wo liegen die Reserven?</strong> Bei arterieller Verschlusskrankheit (pAVK) ist strukturiertes Intervall-Gehtraining (bis zur Schmerzgrenze und weiter) die wirksamste Intervention. Allgemein: Ausdauertraining, Rauchstopp (sofortige Gefäßwirkung) und ausreichende Hydratation.`
+        },
+        {
+            title: 'Pack-An-Power (Handkraft)', val: d.gr, unit: 'kg', isRed: d.gr < 26,
+            norm: 'Kräftige Hände sind ein Zeichen für intakte Ganzkörper-Muskulatur und Vitalität.',
+            analysis: `<strong>Bewertung:</strong> Ein Wert von ${d.gr} kg unterschreitet die Norm (EWGSOP2-Kriterien) und erfüllt das Diagnosekriterium für Sarkopenie. Eine niedrige Handkraft ist ein starker Prädiktor für Pflegebedürftigkeit und Sturzrisiko.<br><strong>Wo liegen die Reserven?</strong> Progressives Krafttraining 2–3×/Woche ist die einzige wirksame Intervention, um Muskelmasse im hohen Alter wieder aufzubauen. Begleitend muss die Proteinzufuhr auf mind. 1,2–1,6 g/kg Körpergewicht/Tag angehoben werden.`
+        },
+        {
+            title: 'Fahrstabilität (TUG)', val: d.tg, unit: 's', isRed: d.tg > 10,
+            norm: 'Eine Zeit unter 10 Sekunden beweist eine intakte Koordination und ein geringes Sturzrisiko.',
+            analysis: `<strong>Bewertung:</strong> Grenzwertig bis pathologisch. Ein TUG von ${d.tg} Sekunden ist eine wichtige Warnstufe für eingeschränkte Alltagsmobilität und ein deutlich erhöhtes Sturzrisiko.<br><strong>Wo liegen die Reserven?</strong> Dies ist der Parameter mit dem höchsten Interventionspotenzial! Gezieltes Gleichgewichts- und Krafttraining (z.B. Otago-Programm, Tai Chi 3x/Woche) können den TUG um 2–4 Sekunden verbessern und das Sturzrisiko um ca. 35 % senken.`
+        },
+        {
+            title: 'Sauerstoff-Tank (SpO2)', val: d.spo2, unit: '%', isRed: d.spo2 < 95,
+            norm: 'Ihre Blutsättigung ist optimal, Ihr Gehirn erhält ausreichend Treibstoff.',
+            analysis: `<strong>Bewertung:</strong> Eine Sättigung von ${d.spo2}% in Ruhe weist auf reduzierte kardiopulmonale Reserven hin und dämpft die kognitive Vigilanz.<br><strong>Wo liegen die Reserven?</strong> Nach ärztlicher Abklärung (Ausschluss COPD/Schlafapnoe) verbessert gezieltes Ausdauertraining die muskuläre Sauerstoffnutzung auf der Zellebene.`
+        },
+        {
+            title: 'Taktgeber (Ruhepuls)', val: d.hr, unit: 'bpm', isRed: d.hr > 80,
+            norm: 'Ein ruhiger Herzschlag schont den Herzmuskel und zeigt gute Fitness.',
+            analysis: `<strong>Bewertung:</strong> Ein Ruhepuls über 80 bpm bedeutet Dauerstress für das Herz und ist ein eigenständiger kardiovaskulärer Risikofaktor.<br><strong>Wo liegen die Reserven?</strong> Regelmäßiges moderates Ausdauertraining senkt die Herzfrequenz nachweislich um 5–15 bpm und vergrößert so Ihre Leistungsreserve deutlich.`
+        },
+        {
+            title: 'Aufsteh-Kraft (Chair Rise)', val: d.ch, unit: 's', isRed: d.ch > 11,
+            norm: 'Sie erheben sich mühelos, was ein Zeichen für starke Oberschenkel ist.',
+            analysis: `<strong>Bewertung:</strong> Die Zeit von ${d.ch}s signalisiert ein funktionelles Defizit der Oberschenkel- und Hüftmuskulatur, der wichtigsten Muskelgruppe für die Alltagsautonomie.<br><strong>Wo liegen die Reserven?</strong> Gezieltes Krafttraining der unteren Extremitäten wirkt wie ein biologischer Schutzpanzer gegen Stürze und Abhängigkeit.`
+        },
+        {
+            title: 'Schwindel-Check (Orthostase)', val: d.rro, unit: 'mmHg', isRed: d.rro > 20,
+            norm: 'Ihr Blutdruck bleibt beim Aufstehen stabil. Das schützt vor Schwindel.',
+            analysis: `<strong>Bewertung:</strong> Ein orthostatischer Blutdruckabfall von über 20 mmHg erhöht das Sturzrisiko erheblich und gefährdet kurzzeitig die Hirndurchblutung.<br><strong>Wo liegen die Reserven?</strong> Langsames Aufstehen in Etappen, konsequente Hydratation (mind. 1,5–2 l/Tag) und eine Überprüfung Ihrer blutdrucksenkenden Medikamente mindern das Risiko drastisch.`
+        },
+        {
+            title: 'Ganggeschwindigkeit (5m)', val: d.walk, unit: 's', isRed: d.walk > 6.2,
+            norm: 'Ein flüssiger, zügiger Gang ist ein exzellenter Prädiktor für Ihre Unabhängigkeit.',
+            analysis: `<strong>Bewertung:</strong> Eine Ganggeschwindigkeit unter 0,8 m/s (hier > 6.2s für 5m) korreliert mit verminderter Autonomie und ist ein Indikator für Frailty.<br><strong>Wo liegen die Reserven?</strong> Gezieltes Widerstands- und Gehtraining reaktiviert die neuronalen Bahnen und verbessert die Mobilität in wenigen Wochen.`
+        },
+        {
+            title: 'Polypharmazie (≥ 5 Med.)', val: d.poly == 1 ? "Ja" : "Nein", unit: '', isRed: d.poly == 1,
+            norm: 'Ihre Medikation ist übersichtlich, das Risiko für Wechselwirkungen minimal.',
+            analysis: `<strong>Bewertung:</strong> Die Einnahme von fünf oder mehr Medikamenten ist einer der stärksten unabhängigen Risikofaktoren für Stürze und Interaktionen im Alter.<br><strong>Wo liegen die Reserven?</strong> Ein strukturiertes ärztliches Medikamentenreview zur Reduktion sturzfördernder Substanzen (z.B. Schlafmittel, Anticholinergika) entlastet den Organismus oft sofort spürbar.`
+        },
+        {
+            title: 'Sturz-Historie', val: d.fall == 1 ? "Ja" : "Nein", unit: '', isRed: d.fall == 1,
+            norm: 'Sie bewegen sich sicher und sturzfrei durch Ihren Alltag.',
+            analysis: `<strong>Bewertung:</strong> Ein zurückliegendes Sturzereignis ist prognostisch hochrelevant und das stärkste Warnsignal für zukünftige Frakturen.<br><strong>Wo liegen die Reserven?</strong> Aktives Gegensteuern durch multimodales Training (Kraft + Balance) sowie das Anpassen von Stolperfallen und Beleuchtung in der eigenen Wohnung können das Risiko massiv senken.`
+        }
+    ];
+
+    let paramHtml = "";
+    params.forEach(p => {
+        let valDisplay = p.isRed ? `<span class="val-red">${p.val} ${p.unit}</span>` : `<span class="val-normal">${p.val} ${p.unit}</span>`;
+        paramHtml += `<div class="param-row">
+            <span class="param-title">${p.title}:</span> ${valDisplay}
+            ${p.isRed ? `<div class="param-analysis">${p.analysis}</div>` : `<div class="param-ok">${p.norm}</div>`}
+        </div>`;
+    });
+    document.getElementById('dynamic-parameters-list').innerHTML = paramHtml;
+
+    // KAPITEL 2: ZUSAMMENFASSENDE WÜRDIGUNG
+    let draft = `<strong>Gesamtbild und strategische Priorität:</strong> Alle erhobenen pathologischen Werte hängen über einen gemeinsamen Nenner zusammen: jahrzehntelange Einflüsse, vaskuläre Alterung, Übergewicht und beginnende Dekonditionierung. Das bedeutet umgekehrt auch: Gezielte Interventionen wirken hier auf mehrere Parameter gleichzeitig. `;
+    
+    const sH_color = document.getElementById('resH').style.backgroundColor;
+    const sM_color = document.getElementById('resM').style.backgroundColor;
+    const sV_color = document.getElementById('total-vitality').style.backgroundColor;
+    
+    const getVerdict = (color) => {
+        if(color.includes('52, 199, 89')) return "eine ausgeprägte Robustheit";
+        if(color.includes('255, 204, 0')) return "eine zunehmende Fragilität";
+        return "eine signifikante Vulnerabilität mit Handlungsbedarf";
+    };
+    draft += `Die funktionelle Auswertung attestiert Ihrem kardiovaskulären System ${getVerdict(sH_color)}, Ihrem neuromuskulären Status ${getVerdict(sM_color)} und Ihrer biologischen Gesamt-Resilienz ${getVerdict(sV_color)}.`;
+    
+    document.getElementById('auto-narrative-text').innerHTML = draft;
+    document.getElementById('manual-expert-text').innerHTML = `<strong>Ergänzende ärztliche Bewertung:</strong> ${document.getElementById('p-comment').value || "Die aufgezeigten Reserven dienen als verlässlicher Fahrplan für Ihre Gesundheit."}`;
+
+    let selectedGoals = [];
+    document.querySelectorAll('.smart-btn.active').forEach(btn => {
+        selectedGoals.push({ cat: btn.parentElement.id, text: btn.innerText, parent: btn.parentElement.previousElementSibling.innerText });
+    });
+    selectedGoals.sort((a,b) => a.cat.localeCompare(b.cat));
+    let triadHtml = "<strong>Die priorisierten Maßnahmen mit dem größten kombinierten Reservepotenzial bei Ihrem Profil:</strong><ul>";
+    selectedGoals.slice(0,3).forEach(g => { triadHtml += `<li class="highlight-goal">${g.parent}: ${g.text}</li>`; });
+    triadHtml += "</ul>";
+    document.getElementById('prognostic-triad').innerHTML = selectedGoals.length > 0 ? triadHtml : "<p><em>Bisher wurden keine spezifischen Aktionsziele festgelegt.</em></p>";
+    document.getElementById('final-closing-chord').innerText = "Wir haben heute Ihre verborgenen Reserven identifiziert – Ihre Konsequenz in der Umsetzung bestimmt nun die Reichweite Ihrer zukünftigen Autonomie.";
+
+    // KAPITEL 3: ALLE SMART GOALS
+    let goalsHtml = "";
+    document.querySelectorAll('.smart-btn.active').forEach(btn => {
+        goalsHtml += `<div class="box-print"><strong>Fokus: ${btn.parentElement.previousElementSibling.innerText}</strong> ➔ Umsetzung: ${btn.innerText}</div>`;
+    });
+    document.getElementById('pat-goals-print').innerHTML = goalsHtml || "<p>Keine Einzel-Ziele markiert.</p>";
+
+    // DRUCK TRIGGER (Erhöhte Safari-Latenz für sauberes CSS-Rendering)
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(() => { window.print(); document.getElementById('print-area').style.display = 'none'; }, 800);
+}
+</script>
+</body>
+</html>
