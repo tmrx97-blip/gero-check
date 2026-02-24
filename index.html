@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vital-Check für Senioren v34</title>
+    <style>
+        :root { --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #1c1e21; --light-bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--light-bg); padding: 10px; color: #1c1e21; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 15px; font-weight: 800; }
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 15px; font-size: 13px; color: #8e8e93; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        label { font-weight: 600; font-size: 14px; flex: 1; }
+        input, select, textarea { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 15px; text-align: center; background: #fff; }
+        input[type="number"], select { width: 85px; }
+        .main-btn { width: 100%; padding: 10px; border: 2px solid #000; border-radius: 12px; font-size: 13px; font-weight: 700; background: transparent; cursor: pointer; text-align: center; margin-bottom: 5px; }
+        .main-btn.selected { background: #e5e5ea; border-width: 3px; }
+        .smart-box { display: none; padding: 4px; background: #fff; border-radius: 10px; margin-bottom: 8px; border: 1px dashed #000; }
+        .smart-btn { display: inline-block; padding: 4px 10px; border: 1px solid #000; border-radius: 18px; font-size: 11px; margin: 2px; cursor: pointer; font-weight: 600; }
+        .smart-btn.active { background: #000; color: #fff; }
+        .res-container { display: flex; gap: 8px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 800; border: 2px solid #000; font-size: 11px; }
+        #total-vitality { margin-top: 15px; padding: 18px; border-radius: 16px; text-align: center; font-weight: 900; font-size: 24px; border: 3px solid #000; }
+        .action-btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 20px; background: var(--blue); color: white; }
+        .btn-print { background: #fff !important; color: #000 !important; border: 2px solid #000 !important; margin-top: 30px; display: none; }
+        @media print {
+            .card, button, .group, h3, input, select { display: none !important; }
+            #print-area { display: block !important; width: 100%; }
+            .page { page-break-after: always; padding: 30px; font-size: 11px; line-height: 1.4; color: #000; }
+            h1 { border-bottom: 3px solid #000; padding-bottom: 5px; font-size: 20px; }
+            h2 { font-size: 14px; background: #f2f2f7; padding: 8px; margin-top: 20px; border-radius: 5px; border-left: 5px solid var(--blue); }
+            .box-print { border: 1px solid #000; padding: 12px; border-radius: 10px; margin: 10px 0; }
+            .param-desc { font-style: italic; font-size: 10px; color: #555; margin-bottom: 5px; display: block; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+            .highlight-goal { color: var(--blue); font-weight: bold; }
+        }
+        #print-area { display: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Vital-Check für Senioren</h2>
+    <div class="group"><label>Patient-ID / Handzeichen</label><input type="text" id="p-name" placeholder="ID"></div>
+    
+    <h3>1. Checkpoints (Basis & Lifestyle)</h3>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="75"> / <input type="number" id="height" value="175"></div></div>
+    <div class="group"><label>Nikotin (Jahre / Zigg. Tag)</label><div><input type="number" id="nic-y" value="0"> / <input type="number" id="nic-c" value="0"></div></div>
+    <div class="group"><label>Jahre rauchfrei?</label><input type="number" id="nic-off" value="0"></div>
+    <div class="group"><label>Medikamente ≥ 5 / Sturz o. Stolp.</label><div><select id="poly"><option value="0">N</option><option value="1">J</option></select> / <select id="fall"><option value="0">N</option><option value="1">J</option></select></div></div>
+
+    <h3>2. Checkpoints (Hämodynamik)</h3>
+    <div class="group"><label>RR syst / diast (mmHg)</label><div><input type="number" id="sys" value="130"> / <input type="number" id="dia" value="85"></div></div>
+    <div class="group"><label>O2 SpO2 (%) / Puls (bpm)</label><div><input type="number" id="spo2" value="96"> / <input type="number" id="hr" value="70"></div></div>
+    <div class="group"><label>PI / Orthostase-Abfall</label><div><input type="number" id="pi" step="0.1" value="1.5"> / <input type="number" id="rr-off" value="0"></div></div>
+
+    <h3>3. Checkpoints (Somatik & Kraft)</h3>
+    <div class="group"><label>Gang (5m) / TUG (s)</label><div><input type="number" id="walk" step="0.1" value="4.4"> / <input type="number" id="tug" step="0.1" value="9.4"></div></div>
+    <div class="group"><label>Aufstehen (s) / Handkraft (kg)</label><div><input type="number" id="chair" step="0.1" value="9.8"> / <input type="number" id="grip" value="35"></div></div>
+
+    <button class="action-btn" onclick="calculate()">Präzisions-Analyse starten</button>
+
+    <div class="res-container"><div id="resH" class="res-box">H-STATUS</div><div id="resM" class="res-box">M-STATUS</div></div>
+    <div id="total-vitality">VITAL-INDEX</div>
+
+    <div id="shop-window" style="display:none; margin-top:25px;">
+        <h2 style="color: var(--blue);">Therapeutische Weichenstellung</h2>
+        <div id="h-grid-title"><h3>Säule A: Herz & Gefäß-Reserve</h3><div id="h-grid"></div></div>
+        <div id="m-grid-title"><h3>Säule B: Muskulo-Skelettale Integrität</h3><div id="m-grid"></div></div>
+        <div id="v-grid-title"><h3>Säule C: Biologische Resilienz</h3><div id="v-grid"></div></div>
+        <textarea id="p-comment" rows="5" style="width:100%; border-radius:10px; padding:10px; margin-top:20px;" placeholder="Ihre ärztliche Würdigung der Befunde... (Der Algorithmus generiert automatisch einen Entwurf, den Sie hier ergänzen können)"></textarea>
+        <button class="action-btn btn-print" id="btn-print" onclick="prepareAndPrint()">Abschlussgutachten drucken</button>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="page">
+        <h1>Vital-Check für Senioren: Physiologisches Gutachten</h1>
+        <p id="pat-meta-top"></p>
+
+        <h2>1. Physiologischer Status Quo & Reservekapazität</h2>
+        <table id="input-data-table"></table>
+        <div id="checks-explanation"></div>
+
+        <h2>2. Zusammenfassende Würdigung</h2>
+        <div class="box-print" id="summary-appreciation" style="background: #fdfdfd; border-left: 6px solid var(--blue); padding: 15px;">
+            <p id="auto-draft-text"></p>
+            <p id="manual-comment-text" style="font-style: italic; margin-top: 10px;"></p>
+            <div id="final-goals-triad" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;"></div>
+            <p id="final-chord" style="margin-top: 20px; font-weight: 800; font-size: 13px; text-align: center; color: var(--blue);"></p>
+        </div>
+
+        <h2>3. Strategische Risiko-Hebel & Präventionspotenzial</h2>
+        <div id="risk-levers-section"></div>
+
+        <h2>4. Individueller Therapie-Fahrplan (SMART-Ziele)</h2>
+        <div id="pat-goals-print"></div>
+
+        <div id="chapter-expert-knowledge">
+            <h2>5. Medizinisches Dossier: Fachärztliche Einordnung</h2>
+            <div id="expert-content"></div>
+        </div>
+
+        <div class="disclaimer" style="margin-top:40px; border-top:1px solid #000; padding-top:10px; font-weight: bold;">
+            Vital-Check für Senioren | Ärztliche Leitung: Dr. [Ihr Name] | Stand: <span class="d-now"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+const OFFERS = {
+    h: [{t: 'Alkohol (Schadensminderung)', s: ['Kein Schnaps nach dem Bier', '2 alk-freie Tage / Woche', 'Bier durch Wasser ersetzen', 'Volumen halbieren', 'Nur zum Essen trinken']}, {t: 'Rauchstopp (Gefäßschutz)', s: ['Stopp-Datum fixiert', 'Nikotinersatz starten', 'Reduktion um 5 Zigg/Tag', 'Beratungstermin vereinbart', 'Rauchfreie Wohnung']}, {t: 'Gewicht managen (Vaskuläre Last)', s: ['-3kg bis Kontrolle', '-5kg in 6 Monaten', 'Keine Süßgetränke mehr', 'Abends Kohlenhydrate ↓', 'Portionsgröße reduzieren']}, {t: 'DASH-Ernährung (Salzarm)', s: ['Max 1 TL Salz / Tag', '5 Port. Obst/Gemüse tgl.', 'Vollkorn statt Weißmehl', 'Kräuter statt Salz', 'Olivenöl-Konzept']}, {t: 'Ausdauer (Rad/Wandern)', s: ['Wandern 3x 45 Min / Woche', 'Radfahren 30 Min tgl.', 'Gehen 150 Min / Woche', 'Schwimmen 2x / Woche', 'Heimtrainer 20 Min tgl.']}, {t: 'Schlaf-Qualität (Herzschutz)', s: ['7-8 Std Schlaf', 'Kein Koffein n. 14 Uhr', 'Kein TV n. 20 Uhr', 'Morgenlicht nutzen', 'Apnoe Check']}, {t: 'Stressmanagement', s: ['10 Min Stille täglich', 'Atem-Fokus b. Stress', 'Body-Scan vor Schlaf', 'Digital Detox am WE', 'Waldbaden']}, {t: 'Trinkmenge (1.5 - 2L)', s: ['Glas Wasser z. Mahlzeit', 'Trinkprotokoll führen', 'Flasche sichtbar aufstellen', 'Vormittags 1 Liter', 'Wasser m. Zitrone']}],
+    m: [{t: 'Kraft (Sarkopenie-Schutz)', s: ['3x10 Wdh. Stuhlkante', 'Widerstandsbänder 2x/Wo', 'Treppe statt Aufzug', 'Fitness-Studio Kraftzirkel', 'Kniebeugen tgl.']}, {t: 'Balance (Sturz-Prävention)', s: ['Einbeinstand b. Zähneputzen', 'Tai Chi Kursbesuch', 'Balance-Board täglich', 'Otago-Übungsprogramm', 'Ferse-zu-Zeh-Gang tgl.']}, {t: 'Protein (1.5g / kg KG)', s: ['25g Eiweiß pro Mahlzeit', 'Molkeprotein n. Belastung', 'Quark / Eier zum Frühstück', 'Hülsenfrüchte-Fokus', 'Protein-Abendshake']}, {t: 'Wohnraum-Check (Stolperfrei)', s: ['Teppichfallen entfernen', 'Haltegriffe im Bad', 'Licht nachts optimieren', 'Kabelkanäle legen', 'Ergotherapie-Hausbesuch']}, {t: 'Vitamin D & Kreatin', s: ['Vit. D (800-2000 IE) tgl.', 'Kreatin 3-5g tgl.', 'Check Calcium-Zufuhr', 'B12-Spiegel Kontrolle', 'Ferritin-Wert prüfen']}, {t: 'Seh- & Hörkraft Check', s: ['Termin beim Augenarzt', 'Akustiker-Hörtest', 'Brillenstärke prüfen', 'Hörgerät-Revision', 'Beleuchtung optimieren']}, {t: 'Fußpflege & Schuhe', s: ['Med. Fußpflege vereinbart', 'Schuhe m. festem Halt', 'Keine weichen Hausschuhe', 'Einlagen-Check Orthopädie', 'Nagelpilz-Therapie']}, {t: 'Hilfsmittel (Rollator)', s: ['Rollator-Einstellung prüfen', 'Gehstock-Training', 'Bremstest Rollator tgl.', 'Sicherheitstraining', 'Akzeptanz-Gespräch']}],
+    v: [{t: 'Gehirn-Fitness (Kognition)', s: ['Rechnen beim Gehen', 'Gedächtnis-Apps nutzen', 'Skat/Schach spielen', 'Instrument reaktivieren', 'Lesekreis beitreten', 'Rückwärtsbuchstabieren'], note: true}, {t: 'Achtsamkeit (MBSR)', s: ['10 Min Meditation tgl.', 'Dankbarkeits-Tagebuch', '5-4-3-2-1 Methode nutzen', 'Waldbaden 1x/Woche', 'Genusstraining'], note: true}, {t: 'Soziale Teilhabe', s: ['Senioren-Treffpunkt / Café', 'Regelmäßiger Familien-Call', 'Ehrenamt / Mentoring', 'Vereins-Treffen', 'Frühstück Freunde']}, {t: 'Schlafhygiene (Vigilanz)', s: ['Fixe Aufstehzeiten', 'Morgenlicht 20 Min.', 'Kein TV im Bett', 'Abendritual einhalten', 'Cool-down 19h']}, {t: 'Naturkontakt & Wald', s: ['Waldgang wöchentlich', 'Gartenarbeit aktiv', 'Stadtpark-Runde tgl.', 'Balkon-Natur', 'Vogelbeobachtung']}, {t: 'Ehrenamt & Sinnstiftung', s: ['Lesepate / Mentoring', 'Tafel / Nachbarschaftshilfe', 'Vereins-Vorstand', 'Gärtner-Gruppe', 'Enkel-Tag']}, {t: 'KVT-I (Schlaf-Training)', s: ['Schlaf-Tagebuch', 'Bett-Zeit-Restriktion', 'Entspannungs-Audio', 'KVT-I App starten', 'Schlaf-Instruktion']}, {t: 'Schmerz-Management', s: ['Multimodale Therapie', 'Physiotherapie Fokus', 'Jacobson-Entspannung', 'Wärme-/Kälteanwendung', 'TENS-Gerät Nutzung', 'Medikamenten-Review']}]
+};
+
+function calculate() {
+    const d = {
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value/100,
+        sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value,
+        o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        pi: +document.getElementById('pi').value, rrO: +document.getElementById('rr-off').value,
+        wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value,
+        ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value,
+        poly: +document.getElementById('poly').value, fall: +document.getElementById('fall').value,
+        ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, no: +document.getElementById('nic-off').value
+    };
+    const bmi = d.w / (d.h * d.h);
+    const amp = d.sys - d.dia;
+    let py = (d.ny * d.nc) / 20; if(d.no > 7) py = 0; else if(d.no >= 3) py /= 2;
+
+    let sH = 0; if(d.sys>=120 && d.sys<=139) sH+=2; else if(d.sys>=100 && d.sys<=159) sH+=1;
+    if(d.o2>=95) sH+=2; if(d.hr>=60 && d.hr<=85) sH+=2; if(d.pi>=1.4) sH+=2;
+    if(d.rrO > 20) sH -= 3;
+
+    let sM = 0; if(d.wa<4.8) sM+=2; if(d.tg<10) sM+=2; if(d.ch<11) sM+=2;
+    if(d.gr>=26) sM+=2; if(bmi>=22) sM+=2; if(d.fall == 0) sM+=2;
+
+    // DEEP-RISK VETO LOGIK
+    let statusH = sH >= 8 ? 'green' : sH >= 6 ? 'yellow' : 'red';
+    let statusM = sM >= 10 ? 'green' : sM >= 7 ? 'yellow' : 'red';
+    let statusV = (sH + sM) >= 20 ? 'green' : (sH + sM) >= 15 ? 'yellow' : 'red';
+
+    if(bmi > 30 || py > 20 || d.poly == 1 || amp > 60 || d.fall == 1 || d.tg > 15) {
+        if(statusH === 'green') statusH = 'yellow';
+        if(statusM === 'green') statusM = 'yellow';
+        if(statusV === 'green') statusV = 'yellow';
+    }
+    if(bmi > 35 || py > 40 || d.tg > 20) { statusH = 'red'; statusM = 'red'; statusV = 'red'; }
+    if(bmi < 22 && d.gr < 26) statusM = 'red';
+
+    const colors = { green: '#34c759', yellow: '#ffcc00', red: '#ff3b30' };
+    document.getElementById('resH').style.background = colors[statusH];
+    document.getElementById('resM').style.background = colors[statusM];
+    const bv = document.getElementById('total-vitality'); bv.style.background = colors[statusV];
+    bv.innerHTML = `VITAL-INDEX: ${statusV.toUpperCase()} (${sH+sM}/22)`;
+    document.getElementById('shop-window').style.display = 'block';
+    renderGrid('h-grid', OFFERS.h); renderGrid('m-grid', OFFERS.m); renderGrid('v-grid', OFFERS.v);
+}
+
+function renderGrid(cid, list) {
+    const container = document.getElementById(cid); container.innerHTML = "";
+    list.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<button class="main-btn" onclick="this.classList.toggle('selected'); toggleSmart('${cid}-${idx}')">${item.t}</button>
+                         <div class="smart-box" id="smart-${cid}-${idx}">${item.s.map(s => `<span class="smart-btn" onclick="selectSmart(this)">${s}</span>`).join('')}</div>`;
+        container.appendChild(div);
+    });
+}
+function toggleSmart(id) { const el = document.getElementById('smart-'+id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+function selectSmart(span) { span.parentElement.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active')); span.classList.add('active'); }
+
+function prepareAndPrint() {
+    const d = { 
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value, sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value, pi: +document.getElementById('pi').value, ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, gr: +document.getElementById('grip').value, tg: +document.getElementById('tug').value, spo2: +document.getElementById('spo2').value, ch: +document.getElementById('chair').value, rro: +document.getElementById('rr-off').value, fall: +document.getElementById('fall').value, hr: +document.getElementById('hr').value
+    };
+    const bmi = (d.w / ((d.h/100)**2)).toFixed(1);
+    const py = (d.ny * d.nc) / 20;
+    const amp = d.sys - d.dia;
+    const sH_color = document.getElementById('resH').style.backgroundColor;
+    const sM_color = document.getElementById('resM').style.backgroundColor;
+    const sV_color = document.getElementById('total-vitality').style.backgroundColor;
+
+    document.getElementById('pat-meta-top').innerHTML = `<strong>Patienten-ID:</strong> ${document.getElementById('p-name').value || 'Patient'} | <strong>Untersuchungsdatum:</strong> ${new Date().toLocaleDateString('de-DE')}`;
+    
+    // 1. DYNAMISCHE WÜRDIGUNG
+    let draft = `Die aktuelle Befundlage zeichnet ein detailliertes Bild Ihrer physiologischen Konstitution. `;
+    if(bmi >= 28) draft += `Das Kampfgewicht (BMI) von ${bmi} fungiert als vaskuläre Last und beeinträchtigt die Herz-Reserve. `;
+    if(d.sys > 140) draft += `Der vorliegende Blutdruck erfordert eine vaskuläre Entlastung zur Protektion der Organe. `;
+    if(amp > 60) draft += `Die gemessene Hämodynamische Amplitude deutet auf eine abnehmende Elastizität Ihrer Gefäßwände hin. `;
+    if(d.tg > 12) draft += `In der Mobilitätsprüfung zeigt die Fahrstabilität (TUG) koordinative Defizite, die Ihre Autonomie gefährden. `;
+    if(py > 20) draft += `Die kumulative Nikotinexposition stellt den dominanten Risikofaktor für Ihre langfristige Gefäßintegrität dar. `;
+    document.getElementById('auto-draft-text').innerText = draft;
+
+    const getVerdict = (color) => {
+        if(color.includes('52, 199, 89')) return "eine ausgeprägte Robustheit";
+        if(color.includes('255, 204, 0')) return "eine zunehmende Fragilität";
+        return "eine signifikante Vulnerabilität";
+    };
+    document.getElementById('manual-comment-text').innerHTML = `<strong>Klinische Einordnung:</strong> Wir attestieren Ihrem Herz-Status ${getVerdict(sH_color)}, Ihrem Muskel-Status ${getVerdict(sM_color)} und Ihrer Gesamt-Resilienz ${getVerdict(sV_color)}. ${document.getElementById('p-comment').value}`;
+
+    // 2. TOP 3 SMART GOALS
+    let selectedGoals = [];
+    document.querySelectorAll('.smart-btn.active').forEach(btn => {
+        selectedGoals.push({ cat: btn.parentElement.id, text: btn.innerText, parent: btn.parentElement.previousElementSibling.innerText });
+    });
+    selectedGoals.sort((a,b) => a.cat.localeCompare(b.cat));
+    let triadHtml = "<strong>Die 3 prioritären Schritte für Ihre Prognose:</strong><ul>";
+    selectedGoals.slice(0,3).forEach(g => { triadHtml += `<li class="highlight-goal">${g.parent}: ${g.text}</li>`; });
+    triadHtml += "</ul>";
+    document.getElementById('final-goals-triad').innerHTML = selectedGoals.length > 0 ? triadHtml : "";
+    document.getElementById('final-chord').innerText = "Wir haben heute Ihren Kurs präzise korrigiert – Ihre Konsequenz in der Umsetzung bestimmt nun die Reichweite Ihrer zukünftigen Autonomie.";
+
+    // 3. TABELLE (DOPPEL-NAMING)
+    document.getElementById('input-data-table').innerHTML = `
+        <tr><td><strong>Vaskuläre Last (Kampfgewicht / BMI: ${bmi})</strong><br><span class="param-desc">Verhältnis von Masse zu Größe. Maßgeblich für die chronische Druckbelastung des Herzmuskels.</span></td></tr>
+        <tr><td><strong>Gefäß-Integratät (Qualm-Konto / PY: ${py.toFixed(1)})</strong><br><span class="param-desc">Summe lebenslanger Giftexposition. Zentraler Prädiktor für Arteriosklerose und Gewebealterung.</span></td></tr>
+        <tr><td><strong>Ader-Hammer (Hämodynamische Amplitude: ${amp} mmHg)</strong><br><span class="param-desc">Differenzdruck der Gefäße. Indikator für die Wandsteifigkeit der Aorta und das Schlaganfallrisiko.</span></td></tr>
+        <tr><td><strong>Durchblutungs-Radar (Peripherer Perfusions-Index: ${d.pi})</strong><br><span class="param-desc">Effizienz der Mikrozirkulation. Zeigt, wie viel Energie die Kapillaren der Peripherie erreicht.</span></td></tr>
+        <tr><td><strong>Pack-An-Power (Neuro-Muskulärer Kraftindex: ${d.gr} kg)</strong><br><span class="param-desc">Marker für die globale Muskelmasse (Sarkopenie-Grad) und die biologische Reserve.</span></td></tr>
+        <tr><td><strong>Fahrstabilität (Mobilitäts-Koordination / TUG: ${d.tg} s)</strong><br><span class="param-desc">Zeit für Aufstehen und Richtungswechsel. Entscheidend für das operative Sturzrisiko.</span></td></tr>
+    `;
+
+    // 4. EXPERTEN-DOSSIER
+    let expertHtml = "";
+    if(d.spo2 < 95) expertHtml += `<div class="box-print"><strong>SAUERSTOFF-TANK:</strong> Ein reduzierter Gehalt im Blut dämpft die kognitive Vigilanz und die muskuläre Ausdauer.</div>`;
+    if(d.ch > 11) expertHtml += `<div class="box-print"><strong>SARKOPENIE-PROPHYLAXE:</strong> Schwache Beinkraft führt unweigerlich zum Verlust der Autonomie. Krafttraining ist hier die einzige Kausaltherapie.</div>`;
+    if(d.hr > 85) expertHtml += `<div class="box-print"><strong>KARDIO-STRESS-INDEX:</strong> Ein hoher Ruhepuls erhöht den myokardialen Sauerstoffverbrauch und verschleißt die Reservekapazität.</div>`;
+    document.getElementById('expert-content').innerHTML = expertHtml;
+    document.getElementById('chapter-expert-knowledge').style.display = expertHtml ? 'block' : 'none';
+
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(() => { window.print(); document.getElementById('print-area').style.display = 'none'; }, 200);
+}
+</script>
+</body>
+</html>
