@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gero-Check Ultimate v14 (DEGAM-Standard)</title>
+    <style>
+        :root { 
+            --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #8e8e93; --light-bg: #f2f2f7;
+            --h-color: var(--gray); --m-color: var(--gray); --v-color: var(--gray);
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--light-bg); padding: 10px; color: #1c1e21; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 20px; font-weight: 800; }
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 20px; font-size: 14px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        label { font-weight: 600; font-size: 14px; flex: 1; }
+        input, select, textarea { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 15px; background: #fff; }
+        input[type="number"], select { width: 85px; text-align: center; }
+        
+        /* Triage & Therapy */
+        .therapy-block { display: none; margin-top: 20px; padding: 15px; border-radius: 18px; background: #f9f9fb; border: 1px solid #e5e5ea; }
+        .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .chip { padding: 12px 16px; background: #fff; border-radius: 25px; font-size: 12px; cursor: pointer; border: 2px solid var(--gray); font-weight: 700; color: var(--gray); transition: 0.2s; }
+        .chip.active-h { background: var(--h-color) !important; color: white !important; border-color: var(--h-color) !important; }
+        .chip.active-m { background: var(--m-color) !important; color: white !important; border-color: var(--m-color) !important; }
+        .chip.active-v { background: var(--v-color) !important; color: white !important; border-color: var(--v-color) !important; }
+        
+        /* SMART Goal Inputs */
+        .smart-input { display: none; margin-top: 8px; width: 100%; border: 1px dashed var(--blue); padding: 8px; border-radius: 8px; font-size: 13px; }
+        
+        .res-container { display: flex; gap: 10px; margin-top: 20px; }
+        .res-box { flex: 1; padding: 15px; border-radius: 14px; text-align: center; font-weight: 800; font-size: 12px; color: white; background: var(--gray); }
+        #total-vitality { margin-top: 20px; padding: 20px; border-radius: 18px; text-align: center; font-weight: 900; font-size: 24px; color: white; background: var(--gray); }
+        
+        button { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        .btn-calc { background: var(--blue); color: white; }
+        .btn-print { background: #fff; color: var(--blue); border: 2px solid var(--blue); margin-top: 30px; display: none; }
+        .btn-reset { background: transparent; color: var(--red); font-size: 12px; border: none; text-decoration: underline; margin-top: 25px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .card, button, .group, h3, select, input, textarea { display: none !important; }
+            #print-area { display: block; width: 100%; }
+            .page { page-break-after: always; padding: 50px; min-height: 98vh; position: relative; }
+            h1 { color: var(--blue); border-bottom: 4px solid var(--blue); padding-bottom: 10px; font-size: 28px; }
+            h2 { color: #333; margin-top: 30px; border-left: 5px solid var(--blue); padding-left: 10px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+            .box-print { border: 2px solid #000; padding: 20px; border-radius: 12px; margin: 20px 0; line-height: 1.6; }
+            .disclaimer { font-size: 10px; color: gray; position: absolute; bottom: 30px; width: 85%; border-top: 1px solid #eee; padding-top: 10px; }
+        }
+        #print-area { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Gero-Check Ultimate v14</h2>
+    <div class="group"><label>Patient-ID / Handzeichen</label><input type="text" id="p-name" placeholder="Name/ID"></div>
+    
+    <h3>1. Anamnese & Lifestyle</h3>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="75"> / <input type="number" id="height" value="175"></div></div>
+    <div class="group"><label>Nikotin (Jahre / Zigg. pro Tag)</label><div><input type="number" id="nic-y" value="0"> / <input type="number" id="nic-c" value="0"></div></div>
+    <div class="group"><label>Seit wieviel Jahren rauchfrei?</label><input type="number" id="nic-off" value="0"></div>
+    <div class="group"><label>Medikamente ≥ 5 / Sturz o. Stolpern?</label><div><select id="poly"><option value="0">Nein</option><option value="1">Ja</option></select> / <select id="fall"><option value="0">Nein</option><option value="1">Ja</option></select></div></div>
+
+    <h3>2. Hämodynamik</h3>
+    <div class="group"><label>Blutdruck syst / diast (mmHg)</label><div><input type="number" id="sys" value="130"> / <input type="number" id="dia" value="85"></div></div>
+    <div class="group"><label>SpO2 (%) / Puls (bpm)</label><div><input type="number" id="spo2" value="96"> / <input type="number" id="hr" value="70"></div></div>
+    <div class="group"><label>PI / Orthostase-Abfall (syst)</label><div><input type="number" id="pi" step="0.1" value="1.5"> / <input type="number" id="rr-off" value="0"></div></div>
+
+    <h3>3. Somatik</h3>
+    <div class="group"><label>Gang (5m) / TUG (s)</label><div><input type="number" id="walk" step="0.1" value="4.5"> / <input type="number" id="tug" step="0.1" value="9.5"></div></div>
+    <div class="group"><label>Chair Rise / Handkraft (kg)</label><div><input type="number" id="chair" step="0.1" value="10.0"> / <input type="number" id="grip" value="35"></div></div>
+
+    <button class="btn-calc" onclick="calculate()">Schritt 1: Analyse & Triage</button>
+
+    <div class="res-container">
+        <div id="resH" class="res-box">H-SCORE</div>
+        <div id="resM" class="res-box">M-SCORE</div>
+    </div>
+    <div id="total-vitality">VITALITÄT</div>
+
+    <div id="plan-section" style="display:none;">
+        <h2 style="margin-top:40px; color: var(--blue);">Schritt 2: Gemeinsame Ziele setzen</h2>
+        
+        <div id="h-therapy" class="therapy-block">
+            <h3>Opt. Hämodynamik (Herz/Kreislauf)</h3>
+            <div class="chips" id="h-chips"></div>
+        </div>
+
+        <div id="m-therapy" class="therapy-block">
+            <h3>Opt. Somatik (Kraft/Bewegung)</h3>
+            <div class="chips" id="m-chips"></div>
+        </div>
+
+        <div id="v-therapy" class="therapy-block">
+            <h3>Opt. Resilienz (Teilhabe/Geist)</h3>
+            <div class="chips" id="v-chips"></div>
+        </div>
+
+        <textarea id="p-comment" rows="3" style="width:100%; margin-top:20px;" placeholder="Persönliche Vereinbarung / Ärztlicher Kommentar..."></textarea>
+        <button class="btn-print" id="btn-print" onclick="prepareAndPrint()">Schritt 3: Berichte erstellen</button>
+    </div>
+
+    <div style="text-align:center;"><button class="btn-reset" onclick="resetForm()">Assessment löschen</button></div>
+</div>
+
+<div id="print-area">
+    <div class="page" id="page-pat">
+        <h1>Mein Fahrplan zur Vitalität</h1>
+        <p id="pat-header"></p>
+        <div class="box-print">
+            <strong>Was wir heute festgestellt haben:</strong>
+            <p id="pat-status"></p>
+        </div>
+        <h2>Meine persönlichen Ziele (SMART)</h2>
+        <div id="pat-goals" class="box-print" style="border-color: var(--green);"></div>
+        <p><em>„Gesundheit ist nicht alles, aber ohne Gesundheit ist alles nichts.“ – Nutzen Sie diesen Plan als Ihren persönlichen Kompass.</em></p>
+        <div class="disclaimer">Dieses Dokument dient Ihrer Motivation und Information. Stand: <span class="d-now"></span></div>
+    </div>
+
+    <div class="page" id="page-doc">
+        <h1>Ärztliches Ergebnisprotokoll (DEGAM)</h1>
+        <p id="doc-header"></p>
+        <table><thead><tr><th>Parameter</th><th>Wert</th><th>Differenzialdiagnostischer Fokus</th></tr></thead><tbody id="doc-table"></tbody></table>
+        <div class="box-print">
+            <strong>Klinische Interpretation & Vereinbarung:</strong>
+            <p id="doc-interp"></p>
+        </div>
+        <h2>Interventionsplan & Follow-up</h2>
+        <div id="doc-goals" class="box-print"></div>
+        <div class="disclaimer">Gero-Check Ultimate v14. Erstellt am <span class="d-now"></span>.</div>
+    </div>
+</div>
+
+<script>
+const DEGAM_TIPS = {
+    h: [
+        {t: 'Radfahren/Wandern (3x45 Min.)', s: 'Ziel (km/Min):', cond: (d)=>d.sys>140||d.bmi>25},
+        {t: 'Salzreduktion (DASH-Kost)', s: 'Ziel (Salzersatz?):', cond: (d)=>d.sys>140},
+        {t: 'Rauchstopp-Programm', s: 'Stopp-Datum:', cond: (d)=>d.py>0},
+        {t: 'Trinkmenge optimieren (2L)', s: 'Kontrolle durch:', cond: (d)=>d.rrO>5}
+    ],
+    m: [
+        {t: 'Kniebeugen am Stuhl (3x10)', s: 'Häufigkeit:', cond: (d)=>d.gr<26||d.ch>11},
+        {t: 'Einbeinstand beim Zähneputzen', s: 'Sekunden:', cond: (d)=>d.tg>10},
+        {t: 'Proteinreiche Kost (+Ei/Quark)', s: 'Mahlzeit:', cond: (d)=>d.bmi<22}
+    ],
+    v: [
+        {t: 'Besuch Nachbarschafts-Café', s: 'Wann:', cond: true},
+        {t: 'Ehrenamt / Lesepate', s: 'Kontakt bis:', cond: true},
+        {t: 'Sportgruppe 60+ / Wandern', s: 'Schnuppern am:', cond: true},
+        {t: '5-4-3-2-1 Achtsamkeit täglich', s: 'Uhrzeit:', cond: true}
+    ]
+};
+
+function calculate() {
+    const d = {
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value/100,
+        sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value,
+        o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        pi: +document.getElementById('pi').value, rrO: +document.getElementById('rr-off').value,
+        wa: +document.getElementById('walk').value, tg: +document.getElementById('tug').value,
+        ch: +document.getElementById('chair').value, gr: +document.getElementById('grip').value,
+        poly: +document.getElementById('poly').value, fall: +document.getElementById('fall').value,
+        ny: +document.getElementById('nic-y').value, nc: +document.getElementById('nic-c').value, no: +document.getElementById('nic-off').value
+    };
+    d.bmi = d.w / (d.h * d.h);
+    d.py = (d.no > 7) ? 0 : (d.no >= 3 ? (d.ny*d.nc/40) : (d.ny*d.nc/20));
+
+    let sH = 0;
+    if(d.sys>=120 && d.sys<=139 && d.dia>=80 && d.dia<=89) sH+=2; else if(d.sys>=100 && d.sys<=159) sH+=1;
+    if(d.o2>=95) sH+=2; else if(d.o2>=91) sH+=1;
+    if(d.hr>=60 && d.hr<=85) sH+=2; else if(d.hr>=50 && d.hr<=100) sH+=1;
+    if(d.pi>=1.5) sH+=2; else if(d.pi>=0.6) sH+=1;
+    if(d.rrO<10) sH+=2; else if(d.rrO<=20) sH+=1;
+    if((d.sys-d.dia)>60 || d.poly==1 || d.py>15) sH=Math.max(0, sH-1);
+
+    let sM = 0;
+    if(d.wa<4.8) sM+=2; else if(d.wa<=6.5) sM+=1;
+    if(d.tg<10) sM+=2; else if(d.tg<=15) sM+=1;
+    if(d.ch<11) sM+=2; else if(d.ch<=15) sM+=1;
+    if(d.gr>=26) sM+=2; else if(d.gr>=20) sM+=1;
+    if(d.bmi>=22) sM+=2; else if(d.bmi>=20) sM+=1;
+    if(d.fall==0) sM+=2;
+
+    const t = sH + sM;
+    const isTop = (t >= 20);
+
+    const hC = sH>=8?'--green':sH>=6?'--yellow':'--red';
+    const mC = sM>=10?'--green':sM>=7?'--yellow':'--red';
+    const vC = isTop?'--green':t>=15?'--yellow':'--red';
+
+    document.documentElement.style.setProperty('--h-color', `var(${hC})`);
+    document.documentElement.style.setProperty('--m-color', `var(${mC})`);
+    document.documentElement.style.setProperty('--v-color', `var(${vC})`);
+
+    document.getElementById('resH').style.background = `var(${hC})`;
+    document.getElementById('resH').innerHTML = `H-SCORE: ${sH}/10`;
+    document.getElementById('resM').style.background = `var(${mC})`;
+    document.getElementById('resM').innerHTML = `M-SCORE: ${sM}/12`;
+    const bv = document.getElementById('total-vitality');
+    bv.style.background = `var(${vC})`;
+    bv.innerHTML = `VITALITÄT: ${isTop?'TOP':t>=15?'LABIL':'RISIKO'} (${t}/22)`;
+
+    // THERAPY UI
+    document.getElementById('plan-section').style.display = 'block';
+    if(isTop) {
+        ['h','m','v'].forEach(k => document.getElementById(`${k}-therapy`).style.display = 'none');
+    } else {
+        fillChips('h-chips', DEGAM_TIPS.h, d, 'active-h');
+        fillChips('m-chips', DEGAM_TIPS.m, d, 'active-m');
+        fillChips('v-chips', DEGAM_TIPS.v, d, 'active-v');
+        document.getElementById('h-therapy').style.display = (sH < 8) ? 'block' : 'none';
+        document.getElementById('m-therapy').style.display = (sM < 10) ? 'block' : 'none';
+        document.getElementById('v-therapy').style.display = 'block';
+    }
+    document.getElementById('btn-print').style.display = 'block';
+    window.scrollTo({ top: document.getElementById('resH').offsetTop, behavior: 'smooth' });
+}
+
+function fillChips(id, tips, data, activeClass) {
+    const container = document.getElementById(id); container.innerHTML = "";
+    tips.forEach((tip, idx) => {
+        if(tip.cond(data)) {
+            const wrapper = document.createElement('div'); wrapper.style.marginBottom = "10px";
+            const chip = document.createElement('div'); chip.className = "chip"; chip.innerText = tip.t;
+            const input = document.createElement('input'); input.className = "smart-input"; 
+            input.placeholder = tip.s; input.id = `smart-${id}-${idx}`;
+            
+            chip.onclick = () => { 
+                chip.classList.toggle(activeClass);
+                input.style.display = chip.classList.contains(activeClass) ? "block" : "none";
+            };
+            wrapper.appendChild(chip); wrapper.appendChild(input);
+            container.appendChild(wrapper);
+        }
+    });
+}
+
+function prepareAndPrint() {
+    const id = document.getElementById('p-name').value || "Patient";
+    const date = new Date().toLocaleDateString('de-DE');
+    document.querySelectorAll('.d-now').forEach(el => el.innerText = date);
+
+    const d = { 
+        w: +document.getElementById('weight').value, h: +document.getElementById('height').value/100,
+        sys: +document.getElementById('sys').value, dia: +document.getElementById('dia').value,
+        o2: +document.getElementById('spo2').value, hr: +document.getElementById('hr').value,
+        wa: +document.getElementById('walk').value, gr: +document.getElementById('grip').value,
+        poly: +document.getElementById('poly').value, fall: +document.getElementById('fall').value
+    };
+    const bmi = (d.w / (d.h * d.h)).toFixed(1);
+
+    // HEADERS
+    document.getElementById('pat-header').innerHTML = `<strong>Patient:</strong> ${id} | <strong>Datum:</strong> ${date}`;
+    document.getElementById('doc-header').innerHTML = `<strong>Patient-ID:</strong> ${id} | <strong>Datum:</strong> ${date}`;
+
+    // DOC TABLE
+    document.getElementById('doc-table').innerHTML = `
+        <tr><td>Blutdruck</td><td><b>${d.sys}/${d.dia}</b></td><td>Ausschluss Pseudohypertonie / Orthostase</td></tr>
+        <tr><td>BMI</td><td><b>${bmi}</b></td><td>Sarkopenische Adipositas?</td></tr>
+        <tr><td>Handkraft</td><td><b>${d.gr} kg</b></td><td>Sarkopenie-Marker (Cut-off m:30/w:18)</td></tr>
+        <tr><td>TUG / Gang</td><td><b>${document.getElementById('tug').value}s / ${d.wa}s</b></td><td>Sturzrisiko / Mobilitätsreserve</td></tr>
+    `;
+
+    // GOALS COLLECTOR
+    let goalHtml = "<ul>";
+    document.querySelectorAll('.chip.active-h, .chip.active-m, .chip.active-v').forEach(c => {
+        const input = c.nextElementSibling;
+        goalHtml += `<li><strong>${c.innerText}</strong> ${input.value ? ' - Ziel: ' + input.value : ''}</li>`;
+    });
+    goalHtml += "</ul>";
+    document.getElementById('pat-goals').innerHTML = goalHtml;
+    document.getElementById('doc-goals').innerHTML = goalHtml;
+
+    document.getElementById('doc-interp').innerText = document.getElementById('p-comment').value || "Keine weiteren Anmerkungen.";
+    
+    window.print();
+}
+
+function resetForm() { if(confirm("Assessment wirklich löschen?")) location.reload(); }
+</script>
+</body>
+</html>
