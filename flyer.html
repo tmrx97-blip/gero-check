@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info-Flyer: Vital-Check für Senioren</title>
+    <style>
+        :root {
+            --blue: #007aff;
+            --blue-light: #e5f1ff;
+            --dark: #1c1e21;
+            --gray: #f2f2f7;
+            --red-accent: #d32f2f;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--dark);
+            background: #e5e5ea;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm 20mm;
+            box-sizing: border-box;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Typografie */
+        h1 {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 5px;
+            color: var(--blue);
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--dark);
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 22px;
+            color: var(--blue);
+            border-bottom: 2px solid var(--blue-light);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            font-size: 18px;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* Spezielle Design-Elemente */
+        .quote-box {
+            background: #fff5f5;
+            border-left: 8px solid var(--red-accent);
+            padding: 20px 25px;
+            margin: 40px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        .quote-box p {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--red-accent);
+            font-style: italic;
+            line-height: 1.4;
+            margin: 0;
+            text-align: center;
+        }
+
+        .pillar-box {
+            background: var(--gray);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 6px solid var(--blue);
+        }
+
+        .highlight-text {
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .contact-box {
+            margin-top: 50px;
+            padding: 20px;
+            border: 2px solid var(--blue);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--blue-light);
+        }
+
+        ul {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+
+        /* ----------------------------------------------------
+           DRUCK-LOGIK FÜR iPAD / SAFARI (WEBKIT-PANZER)
+           ---------------------------------------------------- */
+        .unbreakable {
+            /* Dieser Block verhindert, dass Container beim Drucken zerrissen werden */
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-column-break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background: white; padding: 0; margin: 0; display: block; }
+            
+            .a4-page { 
+                width: 100%; 
+                height: auto !important; 
+                min-height: auto;
+                padding: 0; 
+                margin: 0;
+                box-shadow: none; 
+                page-break-after: always;
+                position: static !important;
+            }
+            .a4-page:last-child { 
+                page-break-after: auto; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="a4-page">
+        
+        <div class="unbreakable">
+            <h1>Bleiben Sie der Kapitän<br>Ihres Lebens.</h1>
+            <div class="subtitle">Entdecken Sie Ihre verborgenen Gesundheitsreserven.</div>
+        </div>
+
+        <div class="unbreakable quote-box">
+            <p>„Wir berichten Ihnen über 14 Risikomarker, die Sie aktiv beeinflussen können.<br><br>
+            Ohne Blutentnahme.<br>
+            Mit Tests aus Ihrem Alltag.“</p>
+        </div>
+
+        <div class="unbreakable">
+            <h2>Wir warten nicht auf Krankheiten. Wir messen Vitalität.</h2>
+            <p>Die moderne Altersmedizin hat in den letzten Jahren einen faszinierenden Paradigmenwechsel vollzogen. Wir suchen in unserer Praxis heute nicht mehr nur nach Krankheiten und Defiziten, sondern wir messen aktiv Ihre <span class="highlight-text">biologische Reservekapazität</span> und Ihre <span class="highlight-text">Resilienz</span>.</p>
+            
+            <p>Unser innovatives, schmerzfreies Testverfahren durchleuchtet Ihr Herzkreislaufsystem, prüft die Elastizität Ihrer Gefäße und misst Ihre muskulären Reserven.</p>
+            
+            <p><strong>Unser gemeinsames Ziel:</strong> Verborgene Schwachstellen aufdecken, lange <em>bevor</em> sie zu einem Verlust Ihrer Selbstständigkeit führen. Das Beste daran: Jeder einzelne Parameter, den wir in diesem Vital-Check messen, lässt sich von Ihnen im Alltag positiv beeinflussen. Wir zeigen Ihnen genau, wie.</p>
+        </div>
+
+    </div>
+
+    <div class="a4-page">
+
+        <div class="unbreakable">
+            <h2>Was wir testen – schmerzfrei, schnell und präzise:</h2>
+        </div>
+
+        <div class="unbreakable pillar-box">
+            <h3>1. Ihr Herz-Kreislauf-Profil (Hämodynamik)</h3>
+            <p>Wir betrachten nicht nur den Standard-Blutdruck. Wir messen die Elastizität Ihrer Hauptschlagader (den sogenannten „Ader-Hammer“). Ein hochsensibler Sensor am Finger prüft als „Durchblutungs-Radar“ die Sauerstoffversorgung bis in Ihre feinsten Kapillaren. Zudem testen wir, ob Ihr Blutdruck beim Aufstehen stabil bleibt – Ihr wichtigster Schutz vor Schwindel im Alltag.</p>
+        </div>
+
+        <div class="unbreakable pillar-box">
+            <h3>2. Ihr Muskel- und Autonomie-Profil (Somatik)</h3>
+            <p>Mit einem medizinischen Messgerät ermitteln wir Ihre „Pack-An-Power“ (Handkraft) – ein weltweit anerkannter Global-Marker für Ihre gesamte Muskelmasse. Durch alltagsnahe Tests (wie das zügige Aufstehen von einem Stuhl) prüfen wir das perfekte Zusammenspiel von Gehirn und Muskulatur. Das ist Ihre beste Lebensversicherung gegen gefährliche Stürze.</p>
+        </div>
+
+        <div class="unbreakable pillar-box">
+            <h3>3. Ihre Vaskuläre Last (Das Fundament)</h3>
+            <p>Wir analysieren, wie viel metabolische und mechanische Last Ihr Herz täglich tragen muss. Wir prüfen Ihre aktuelle Medikamentenliste auf versteckte Wechselwirkungen („Polypharmazie“) und bewerten gemeinsam, wie wir Ihr System sofort spürbar entlasten können.</p>
+        </div>
+
+        <div class="unbreakable">
+            <h2>Ihr persönlicher Fahrplan in die Zukunft</h2>
+            <p>Nachdem wir Ihre Parameter in der Praxis erfasst haben, wertet unser System die Daten aus und identifiziert Ihre ganz persönlichen, verborgenen Reserven. Am Ende der Untersuchung erhalten Sie:</p>
+            <ul>
+                <li>Einen detaillierten, leicht verständlichen <strong>ärztlichen Befundbericht</strong>.</li>
+                <li>Die exakte Aufklärung darüber, an welchen Stellschrauben Sie den größten Effekt erzielen.</li>
+                <li>Einen <strong>maßgeschneiderten, alltagstauglichen Aktionsplan</strong>, den wir gemeinsam besprechen.</li>
+            </ul>
+        </div>
+
+        <div class="unbreakable contact-box">
+            <h3 style="color: var(--blue); font-size: 20px; margin-top: 0;">Ihre Autonomie in Ihren Händen.</h3>
+            <p style="margin-bottom: 5px;"><strong>Überlassen Sie Ihre Mobilität nicht dem Zufall.</strong></p>
+            <p style="margin-bottom: 0;">Sprechen Sie uns jetzt an der Anmeldung auf Ihren persönlichen Vital-Check an!</p>
+            
+            <div style="margin-top: 20px; font-size: 14px; color: #555; text-align: left; display: flex; justify-content: center;">
+                <div style="border-top: 1px solid #ccc; padding-top: 10px; width: 80%;">
+                    <strong>Praxis Dr. [Ihr Name]</strong><br>
+                    [Straße Hausnummer]<br>
+                    [PLZ Ort]<br>
+                    Telefon: [Ihre Nummer]
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
