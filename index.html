@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vital-Screening für Senioren v40.28</title>
+    <style>
+        :root { --blue: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --gray: #1c1e21; --light-bg: #f2f2f7; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--light-bg); padding: 10px; color: #1c1e21; margin: 0; }
+        
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 650px; margin: auto; }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 15px; font-weight: 800; font-size: 22px;}
+        h3 { border-bottom: 2px solid #e5e5ea; padding-bottom: 5px; margin-top: 15px; font-size: 13px; color: #8e8e93; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        label { font-weight: 600; font-size: 14px; flex: 1; }
+        
+        input, select, textarea { padding: 10px; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 16px !important; text-align: center; background: #fff; }
+        input[type="number"], select { width: 85px; }
+        .full-width { width: 100%; box-sizing: border-box; }
+        
+        .main-btn { width: 100%; padding: 10px; border: 2px solid #000; border-radius: 12px; font-size: 13px; font-weight: 700; background: transparent; cursor: pointer; text-align: center; margin-bottom: 5px; }
+        .main-btn.selected { background: #e5e5ea; border-width: 3px; }
+        .smart-box { display: none; padding: 4px; background: #fff; border-radius: 10px; margin-bottom: 8px; border: 1px dashed #000; }
+        .smart-btn { display: inline-block; padding: 5px 12px; border: 1px solid #000; border-radius: 20px; font-size: 11px; margin: 3px; cursor: pointer; font-weight: 600; }
+        .smart-btn.active { background: #000; color: #fff; }
+        .free-text-input { width: calc(100% - 20px); margin: 8px 10px; padding: 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px !important; text-align: left; }
+        
+        .res-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .res-box { padding: 12px; border-radius: 12px; text-align: center; font-weight: 800; border: 2px solid #000; font-size: 12px; color: #000; }
+        #total-vitality { margin-top: 15px; padding: 15px; border-radius: 14px; text-align: center; font-weight: 900; font-size: 18px; border: 3px solid #000; color: #000;}
+        #fall-risk-box { margin-top: 15px; padding: 15px; border-radius: 14px; text-align: center; font-weight: 900; font-size: 16px; border: 3px solid #000; color: #000; background: #fff; }
+        .action-btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 20px; background: var(--blue); color: white; }
+        .final-print-trigger { background: var(--gray) !important; margin-top: 40px; border: 4px solid var(--blue) !important; }
+        
+        @media screen {
+            #print-area { display: none !important; }
+        }
+        
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; display: block !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; print-color-adjust: exact !important; }
+            .card { display: none !important; }
+            #print-area { display: block !important; width: 100%; }
+            .page { width: 100%; font-size: 11px; line-height: 1.4; color: #000; }
+            h1 { border-bottom: 3px solid #000; padding-bottom: 8px; font-size: 18px; text-transform: uppercase; margin-bottom: 10px; margin-top: 0;}
+            
+            h2 { 
+                font-size: 13px; 
+                background: #f2f2f7 !important; 
+                padding: 6px; 
+                margin-top: 15px; 
+                margin-bottom: 10px; 
+                border-radius: 4px; 
+                border-left: 6px solid #007aff !important; 
+                page-break-before: always; 
+                break-before: page; 
+            }
+            h2:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+                margin-top: 0;
+            }
+
+            .vorbemerkung { font-size: 9.5px; font-style: italic; border: 1px solid #ccc; padding: 6px; margin-bottom: 15px; background: #fdfdfd; }
+            .param-row { margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; page-break-inside: avoid; display: block; width: 100%; }
+            .param-title { font-weight: bold; font-size: 11.5px; }
+            .val-red { color: #d32f2f !important; font-weight: 900; }
+            .val-yellow { color: #b8860b !important; font-weight: bold; }
+            .val-normal { color: #34c759 !important; font-weight: bold; }
+            .param-analysis { margin-top: 4px; padding: 6px; background: #fff5f5 !important; border-left: 4px solid #d32f2f !important; font-size: 10px; -webkit-print-color-adjust: exact; color: #1c1e21; }
+            .param-warning { margin-top: 4px; padding: 6px; background: #fffdf5 !important; border-left: 4px solid #ffcc00 !important; font-size: 10px; -webkit-print-color-adjust: exact; color: #1c1e21; }
+            .param-ok { margin-top: 4px; padding: 6px; background: #f0fdf4 !important; border-left: 4px solid #34c759 !important; font-size: 10px; -webkit-print-color-adjust: exact; color: #1c1e21; }
+            .box-print { border: 1px solid #000; padding: 8px; border-radius: 6px; margin: 8px 0; background: #fff !important; page-break-inside: avoid; display: block; }
+            .highlight-goal { color: #007aff !important; font-weight: bold; margin-bottom: 4px; display: block; }
+            .exercise-box { font-size: 10px; line-height: 1.3; margin-bottom: 8px; padding-left: 10px; border-left: 2px solid #eee; page-break-inside: avoid; }
+            .disclaimer { margin-top: 20px; border-top: 2px solid #000; padding-top: 8px; font-size: 8.5px; line-height: 1.3; text-align: justify; page-break-inside: avoid; }
+            .signature-box { margin-top: 25px; page-break-inside: avoid; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Vital-Screening v40.28</h2>
+    
+    <h3>1. Basis-Checkpoints</h3>
+    <div class="group"><label>Patienten-ID</label><input type="text" id="p-name" placeholder="Name/ID" class="full-width"></div>
+    <div class="group"><label>Behandelnder Arzt</label><input type="text" id="arzt-name" placeholder="Titel, Vor- und Nachname" class="full-width"></div>
+    <div class="group"><label>Untersuchungsdatum</label><input type="date" id="untersuchung-datum" class="full-width"></div>
+    <div class="group"><label>Geschlecht</label><select id="gender"><option value="w">Weiblich</option><option value="m">Männlich</option></select></div>
+    <div class="group"><label>Alter (Jahre)</label><input type="number" id="age" value="72" min="50" max="110"></div>
+    <div class="group"><label>Gewicht (kg) / Größe (cm)</label><div><input type="number" id="weight" value="75"> / <input type="number" id="height" value="165"></div></div>
+    <div class="group"><label>Nikotin (Jahre / Zigg. pro Tag)</label><div><input type="number" id="nic-y" value="0"> / <input type="number" id="nic-c" value="0"></div></div>
+    <div class="group"><label>Medikamente ≥ 5 / Sturz im Vorjahr</label><div><select id="poly"><option value="0">Nein</option><option value="1">Ja</option></select> / <select id="fall"><option value="0">Nein</option><option value="1">Ja</option></select></div></div>
+
+    <h3>2. Hämodynamik</h3>
+    <div class="group"><label>RR syst / diast (mmHg)</label><div><input type="number" id="sys" value="130"> / <input type="number" id="dia" value="80"></div></div>
+    <div class="group"><label>O2 SpO2 (%) / Puls (bpm)</label><div><input type="number" id="spo2" value="97"> / <input type="number" id="hr" value="68"></div></div>
+    <div class="group"><label>Perfusions-Index (PI) / Orthostase (Abfall)</label><div><input type="number" id="pi" step="0.1" value="1.5"> / <input type="number" id="rr-off" value="0"></div></div>
+
+    <h3>3. Muskeln & Sicherheit</h3>
+    <div class="group"><label>Aufstehen (s) / Handkraft (kg)</label><div><input type="number" id="chair" step="0.1" value="10.0"> / <input type="number" id="grip" value="28"></div></div>
+
+    <h3>4. Kognition & Sinne</h3>
+    <div class="group"><label>Kognition (Eigenentwickelter Orientierungstest 0–30 Pkt)</label><input type="number" id="demenz" value="28"></div>
+    <div class="group"><label>Sehen (Pkt 0-4): R / L</label><div><input type="number" id="seeR" value="4"> / <input type="number" id="seeL" value="4"></div></div>
+    
+    <div class="group">
+      <label>Doppelbilder</label>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <select id="diplop-yn" onchange="
+          document.getElementById('diplop-side-wrap').style.display = this.value==='1' ? 'inline-block' : 'none';
+          document.getElementById('diplop').value = this.value==='0' ? '0' : '1';
+        ">
+          <option value="0">Nein</option>
+          <option value="1">Ja</option>
+        </select>
+        <span id="diplop-side-wrap" style="display:none;">
+          <select id="diplop-side" onchange="document.getElementById('diplop').value = this.value;">
+            <option value="1">Einseitig</option>
+            <option value="2">Beidseitig</option>
+          </select>
+        </span>
+        <input type="hidden" id="diplop" value="0">
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Amsler-Gitter</label>
+      <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+        <button type="button" class="amsler-btn" id="amsler-0" onclick="setAmsler(0)"
+          style="padding:7px 10px; border:2px solid #000; border-radius:10px; font-size:12px; font-weight:700; background:#34c759; color:#fff; cursor:pointer; width:220px; text-align:center;">
+          Keine Verzerrungen
+        </button>
+        <button type="button" class="amsler-btn" id="amsler-1" onclick="setAmsler(1)"
+          style="padding:7px 10px; border:2px solid #000; border-radius:10px; font-size:12px; font-weight:700; background:#fff; color:#000; cursor:pointer; width:220px; text-align:center;">
+          Verzerrungen an den Rändern oder unvollständig
+        </button>
+        <button type="button" class="amsler-btn" id="amsler-2" onclick="setAmsler(2)"
+          style="padding:7px 10px; border:2px solid #000; border-radius:10px; font-size:12px; font-weight:700; background:#fff; color:#000; cursor:pointer; width:220px; text-align:center;">
+          Verzerrungen generell, erheblich oder leere Stellen
+        </button>
+        <input type="hidden" id="amsler" value="0">
+      </div>
+    </div>
+
+    <div class="group"><label>Hören (0-3 Pkt)</label><input type="number" id="hear" value="3"></div>
+
+    <button class="action-btn" onclick="calculate()">Präventions-Auswertung starten</button>
+
+    <div class="res-container">
+        <div id="resH" class="res-box">H-STATUS</div>
+        <div id="resM" class="res-box">M-STATUS</div>
+        <div id="resC" class="res-box">C-STATUS</div>
+        <div id="resS" class="res-box">S-STATUS</div>
+    </div>
+    
+    <div id="fall-risk-box">STURZRISIKO-ORIENTIERUNG</div>
+    <div id="total-vitality">VITAL-INDEX</div>
+
+    <div id="shop-window" style="display:none; margin-top:25px;">
+        <h3>Zusatzbeurteilung & Handlungsziele</h3>
+        <div id="h-grid-box"><h3>Herz & Gefäße</h3><div id="h-grid"></div></div>
+        <div id="m-grid-box"><h3>Muskeln & Sicherheit</h3><div id="m-grid"></div></div>
+        <div id="v-grid-box"><h3>Resilienz & Vitalität</h3><div id="v-grid"></div></div>
+        <textarea id="p-comment" rows="3" class="full-width" style="margin-top:15px;" placeholder="Ihre ärztlichen Notizen..."></textarea>
+        <button class="action-btn final-print-trigger" onclick="prepareAndPrint()">BERICHT DRUCKEN</button>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="page">
+        <h1>Ärztlicher Befundbericht – Vital-Screening</h1>
+        <p id="pat-meta-top" style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 12px; font-size: 12px;"></p>
+        <div class="vorbemerkung">
+            <strong>Vorbemerkung:</strong> Dieses Dokument fasst die Ergebnisse Ihres präventiven Vital-Screenings zusammen. Als ärztliche Leistung dient diese Auswertung der systematischen Früherkennung von altersbedingten Risikofaktoren und der gemeinsamen Entwicklung Ihrer persönlichen Gesundheitsziele.
+        </div>
+        
+        <h2>1. Verborgene Reserven heben – Parameterbezogene Analyse</h2>
+        <div id="dynamic-parameters-list"></div>
+        
+        <h2>2. Orientierungswert Sturzrisiko</h2>
+        <div class="box-print" style="border-left: 6px solid #ffcc00;" id="fall-risk-print"></div>
+        
+        <h2>3. Zusammenfassende ärztliche Würdigung</h2>
+        <div class="box-print" style="background: #f9f9fb !important; border-left: 6px solid #007aff !important;">
+            <p id="auto-narrative-text"></p>
+            <div id="status-boxes" style="margin: 8px 0; font-size: 11px;"></div>
+            <p id="manual-expert-text" style="font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;"></p>
+            <div id="prognostic-triad" style="margin-top: 15px;"></div>
+        </div>
+
+        <h2>4. Besprochene Gesundheitsziele</h2>
+        <div id="pat-goals-print"></div>
+
+        <div id="dynamic-extra-chapters"></div>
+
+        <div class="disclaimer">
+            <strong>Rechtlicher Hinweis:</strong> Diese präventive Auswertung begründet keine Garantie über das Eintreten oder Ausbleiben von Erkrankungen oder Stürzen. Der verwendete kognitive Orientierungstest (0–30 Punkte) ist ein eigenentwickeltes Screening-Instrument und kein standardisiertes psychometrisches Verfahren (kein MMSE, kein MoCA). Die Umsetzung der Empfehlungen liegt in der Eigenverantwortung des Patienten und entbindet nicht von der Pflicht, bei Veränderungen ärztlichen Rat einzuholen. Datenschutz: Verarbeitung nur lokal zur ärztlichen Dokumentation. Diese Leistung wurde als individuelle Gesundheitsleistung (IGeL), sofern eine schriftliche IGeL-Vereinbarung vorliegt, auf Basis dieser Vereinbarung und der vorliegenden Einwilligung gemäß Art. 9 Abs. 2 lit. a DSGVO erbracht.
+        </div>
+        
+        <div class="signature-box">
+            <strong id="arzt-name-print"></strong> | Datum: <span class="d-now"></span> | Unterschrift: _________________________ | <span style="font-size:9px; color:#888;">Vital-Screening v40.28</span>
+        </div>
+    </div>
+</div>
+
+<script>
+function sanitize(str) {
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+let globalResults = {};
+
+function setAmsler(val) {
+    document.getElementById('amsler').value = val;
+    [0,1,2].forEach(i => {
+        const btn = document.getElementById('amsler-' + i);
+        const colors = ['#34c759','#ffcc00','#ff3b30'];
+        btn.style.background = (i === val) ? colors[i] : '#fff';
+        btn.style.color = (i === val) ? '#fff' : '#000';
+    });
+}
+
+function resetState() {
+    globalResults = {};
+    document.getElementById('shop-window').style.display = 'none';
+    document.getElementById('resH').style.background = '';
+    document.getElementById('resM').style.background = '';
+    document.getElementById('resC').style.background = '';
+    document.getElementById('resS').style.background = '';
+    document.getElementById('total-vitality').style.background = '';
+    document.getElementById('total-vitality').innerText = 'VITAL-INDEX';
+    document.getElementById('fall-risk-box').innerText = 'STURZRISIKO-ORIENTIERUNG';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setAmsler(0);
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', resetState);
+    });
+    document.getElementById('diplop-side').addEventListener('change', resetState);
+    document.getElementById('diplop-yn').addEventListener('change', resetState);
+    document.querySelectorAll('.amsler-btn').forEach(btn => {
+        btn.addEventListener('click', resetState);
+    });
+});
+
+const TEST_NORM = 27, TEST_LEICHT = 23, TEST_VERDACHT = 18; 
+
+const OFFERS = {
+    h: [
+        { t: 'Blutdruck & Ernährung', s: ['DASH-Diät (Kräuter statt Salz)', '5 Port. Gemüse/Obst tgl.', 'Rotes Fleisch minimieren', 'Vollkorn & Hülsenfrüchte', 'Omega-3 (Fisch/Algenöl)', 'Gewichtsreduktion 5%', 'Alkoholpause (3 Tage/Wo)', 'Intervallfasten (16:8)', 'Rote-Bete-Saft (Nitrat)', 'Magnesiumreiche Snacks'] },
+        { t: 'Ausdauer (Kardio-Schutz)', s: ['150 Min moderates Gehen/Wo', 'Fahrrad-Ergometer (3x20 Min)', 'Nordic Walking (Stockeinsatz)', 'Wassergymnastik/Aqua-Jogging', 'Treppe statt Aufzug', 'Spaziergang nach dem Essen', 'Seniorentanz / Rhythmik', 'E-Bike Touren (moderat)', 'Waldwandern (sanft)', 'Minitrampolin (Rebounder)'] }
+    ],
+    m: [
+        { t: 'Kraft (Anti-Sarkopenie)', s: ['Sit-to-Stand (3x10 Wdh)', 'Theraband-Routinen 2x/Wo', 'Wadenheben am Stuhl', 'Wandliegestütze (Brust/Arme)', 'Kniebeugen (mit Halt)', 'Proteinzufuhr (1,2g/kg)', 'Eiweiß-Snack nach Training', 'Beckenbrücke im Liegen', 'Gartenarbeit (funktionell)', 'Isometrisches Handtuch-Ziehen'] },
+        { t: 'Balance (Sturzprophylaxe)', s: ['Otago-Übungsprogramm', 'Täglicher Einbeinstand', 'Tai-Chi / Qigong Kurs', 'Fersen-Zehen-Gang', 'Gewichtsverlagerung (Stuhl)', 'Balance-Pad / Kissen', 'Stolperfallen entfernen', 'Barfußlaufen (sicherer Boden)', 'Rollator-Fahrtraining', 'Regelm. Sehkontrolle'] }
+    ],
+    v: [
+        { t: 'Neuro-Fitness (Kognition)', s: ['Dual-Task (Gehen + Rechnen)', 'Lesekreis / Buchclub', 'Neues Instrument lernen', 'Sudoku & Schach', 'Alltagsroutinen brechen', 'Soziales Ehrenamt', 'Biografisches Erzählen', 'Handarbeiten (Feinmotorik)', 'Neue Wegstrecken planen', 'Digitale Gedächtnis-Apps'] },
+        { t: 'Regeneration & Hydratation', s: ['Trink-Protokoll (1,5L)', 'Wasserglas zu jeder Mahlzeit', 'Fester Schlafrhythmus', 'Atem-Reset (4-7-8 Methode)', 'Waldbaden (Shinrin-Yoku)', 'Mittagsschlaf (Powernap 20m)', 'Digital Detox (ab 20 Uhr)', 'Progressive Muskelentspannung', 'Dankbarkeitstagebuch', 'Achtsamkeits-Spaziergang'] }
+    ]
+};
+
+function calculate() {
+    if (!document.getElementById('arzt-name').value.trim()) {
+        alert('Bitte geben Sie den Namen des behandelnden Arztes ein.');
+        return;
+    }
+    if (!document.getElementById('untersuchung-datum').value) {
+        alert('Bitte geben Sie das Untersuchungsdatum ein.');
+        return;
+    }
+
+    const checkAge = +document.getElementById('age').value;
+    const checkSys = +document.getElementById('sys').value;
+    
+    if (checkAge < 50 || checkAge > 110) {
+        alert('Eingabefehler: Bitte überprüfen Sie das Alter (Plausibilität 50-110 Jahre).');
+        return;
+    }
+    if (checkSys < 70 || checkSys > 250) {
+        alert('Eingabefehler: Bitte überprüfen Sie den systolischen Blutdruck (Plausibilität 70-250 mmHg).');
+        return;
+    }
+    const checkDia = +document.getElementById('dia').value;
+    if (checkDia < 40 || checkDia > 130) {
+        alert('Eingabefehler: Bitte überprüfen Sie den diastolischen Blutdruck (Plausibilität 40–130 mmHg).');
+        return;
+    }
+
+    const d = {
+        pName: document.getElementById('p-name').value,
+        gender: document.getElementById('gender').value, 
+        age: checkAge,
+        w: +document.getElementById('weight').value,
+        h: Math.max(0.5, +document.getElementById('height').value / 100),
+        sys: checkSys,
+        dia: checkDia, 
+        o2: +document.getElementById('spo2').value,
+        hr: +document.getElementById('hr').value, 
+        pi: parseFloat(document.getElementById('pi').value.toString().replace(',', '.')) || 1.5,
+        rro: +document.getElementById('rr-off').value, 
+        ch: parseFloat(document.getElementById('chair').value.toString().replace(',', '.')) || 10.0,
+        gr: +document.getElementById('grip').value, 
+        poly: +document.getElementById('poly').value,
+        fall: +document.getElementById('fall').value, 
+        dem: +document.getElementById('demenz').value,
+        seeR: +document.getElementById('seeR').value, 
+        seeL: +document.getElementById('seeL').value,
+        diplop: +document.getElementById('diplop').value,
+        amsler: +document.getElementById('amsler').value,
+        hear: +document.getElementById('hear').value, 
+        ny: +document.getElementById('nic-y').value,
+        nc: +document.getElementById('nic-c').value
+    };
+    const bmi = d.w / (d.h * d.h);
+    const amp = d.sys - d.dia;
+    const py = (d.ny * d.nc) / 20;
+    
+    const gripT = d.gender === 'm'
+        ? (d.age < 60 ? 30 : d.age < 70 ? 28 : d.age < 80 ? 26 : 23)
+        : (d.age < 60 ? 20 : d.age < 70 ? 18 : d.age < 80 ? 16 : 14);
+        
+    const chairT = d.age < 70 ? 11 : d.age < 80 ? 12 : 14;
+    
+    let sH = 0; if(d.sys>=110 && d.sys<=139 && d.dia<=90) sH+=2; if(d.o2>=95) sH+=2; if(d.hr>=60 && d.hr<=85) sH+=2; if(d.pi>=1.4) sH+=2; if(d.rro>20) sH-=3;
+    let sM = 0; if(d.ch<=chairT) sM+=2; if(d.gr>=gripT) sM+=2; if(bmi >= 22 && bmi < 30) sM+=2; if(d.fall===0) sM+=2;
+    let sC = d.dem>=TEST_NORM ? 3 : d.dem>=TEST_LEICHT ? 2 : d.dem>=TEST_VERDACHT ? 1 : 0;
+    
+    let sS = d.seeR + d.seeL + d.hear;
+    const seeOk = (d.seeR >= 3 && d.seeL >= 3);
+    const hearOk = (d.hear >= 3);
+    const diplopRed = (d.diplop === 2);
+    const diplopYellow = (d.diplop === 1);
+    const amslerRed = (d.amsler === 2);
+    const amslerYellow = (d.amsler === 1);
+    const hasRedVisual = diplopRed || amslerRed;
+    const hasYellowVisual = diplopYellow || amslerYellow;
+    
+    let cH = sH>=8?'green':sH>=6?'yellow':'red', 
+        cM = sM>=6?'green':sM>=4?'yellow':'red', 
+        cC = sC===3?'green':sC===2?'yellow':'red', 
+        cS = hasRedVisual ? 'red' : (!seeOk || !hearOk || hasYellowVisual) ? 'yellow' : 'green';
+        
+    let total = Math.max(0, sH+sM+sC+sS), cTot = total>=24?'green':total>=18?'yellow':'red';
+    
+    if(py > 20) {
+        if(cH === 'green') cH = 'yellow';
+        if(cTot === 'green') cTot = 'yellow';
+    }
+    if(py > 40) {
+        cH = 'red';
+        cTot = 'red';
+    }
+
+    let orthoRisk = d.rro > 20 ? 1 : 0;
+    let cogRisk = cC === 'red' ? 2 : cC === 'yellow' ? 1 : 0;
+    let visRisk = (d.diplop === 2 || d.amsler === 2) ? 2 : (d.diplop === 1 || d.amsler === 1) ? 1 : 0;
+    let sturzS = (d.fall*4) + (orthoRisk*3) + (d.poly*2) + (cS==='red'?3:cS==='yellow'?1:0) + cogRisk + visRisk;
+    
+    const colors = { green: '#34c759', yellow: '#ffcc00', red: '#ff3b30' };
+    const names = { '#34c759': 'Grün', '#ffcc00': 'Gelb', '#ff3b30': 'Rot' };
+
+    document.getElementById('resH').style.background = colors[cH];
+    document.getElementById('resM').style.background = colors[cM];
+    document.getElementById('resC').style.background = colors[cC];
+    document.getElementById('resS').style.background = colors[cS];
+    document.getElementById('total-vitality').style.background = colors[cTot];
+    document.getElementById('total-vitality').innerText = `VITAL-INDEX: ${total}/30 (${cTot.toUpperCase()})`;
+    document.getElementById('fall-risk-box').innerText = `STURZRISIKO: ${sturzS}/16 Pkt`;
+
+    globalResults = { d, bmi, amp, py, gripT, chairT, cTot, cH, cM, total, sturzS, hexC: { cH: names[colors[cH]], cM: names[colors[cM]], cC: names[colors[cC]], cS: names[colors[cS]], cTot: names[colors[cTot]] } };
+    document.getElementById('shop-window').style.display = 'block';
+    
+    [['h-grid','h'],['m-grid','m'],['v-grid','v']].forEach(([gridId, cat]) => {
+        const savedActive = [...document.querySelectorAll(`#${gridId} .smart-btn.active`)]
+            .map(b => b.innerText);
+        const savedFreeTexts = [...document.querySelectorAll(`#${gridId} .free-text-input`)]
+            .map(i => i.value);
+        renderGrid(gridId, OFFERS[cat]);
+        document.querySelectorAll(`#${gridId} .smart-btn`).forEach(b => {
+            if (savedActive.includes(b.innerText)) b.classList.add('active');
+        });
+        document.querySelectorAll(`#${gridId} .free-text-input`).forEach((inp, i) => {
+            inp.value = savedFreeTexts[i] || '';
+        });
+    });
+}
+
+function renderGrid(id, list) {
+    const c = document.getElementById(id); c.innerHTML = "";
+    list.forEach((it, i) => {
+        const d = document.createElement('div');
+        d.innerHTML = `<button class="main-btn" onclick="this.classList.toggle('selected'); toggleSmart('${id}-${i}')">${it.t}</button>
+                       <div class="smart-box" id="smart-${id}-${i}">
+                           ${it.s.map(s => `<span class="smart-btn" onclick="this.classList.toggle('active')">${s}</span>`).join('')}
+                           <input type="text" class="free-text-input" placeholder="+ Freifeld: eigener Ansatz...">
+                       </div>`;
+        c.appendChild(d);
+    });
+}
+function toggleSmart(id) { const e = document.getElementById('smart-'+id); e.style.display = e.style.display==='block'?'none':'block'; }
+
+function prepareAndPrint() {
+    if (!globalResults.d) {
+        alert('Bitte starten Sie zuerst die Präventions-Auswertung (Triage).');
+        return;
+    }
+
+    const printBtn = document.querySelector('.final-print-trigger');
+    printBtn.innerText = 'Bericht wird vorbereitet...';
+    printBtn.disabled = true;
+
+    const { d, bmi, amp, py, gripT, chairT, cTot, cH, cM, total, sturzS, hexC } = globalResults;
+    
+    document.getElementById('pat-meta-top').innerHTML = `<strong>Pat-ID:</strong> ${sanitize(d.pName) || '---'} &nbsp;|&nbsp; <strong>Geschlecht:</strong> ${d.gender==='m'?'M':'W'} &nbsp;|&nbsp; <strong>Alter:</strong> ${d.age} J. &nbsp;|&nbsp; <strong>Arzt:</strong> ${sanitize(document.getElementById('arzt-name').value) || '---'} &nbsp;|&nbsp; <strong>Datum:</strong> ${new Date(document.getElementById('untersuchung-datum').value).toLocaleDateString('de-DE')}`;
+    document.querySelectorAll('.d-now').forEach(e => e.innerText = new Date(document.getElementById('untersuchung-datum').value).toLocaleDateString('de-DE'));
+    document.getElementById('arzt-name-print').innerText = document.getElementById('arzt-name').value || '---';
+
+    let demText = "";
+    if(d.dem >= TEST_NORM) { demText = "Im Screening kein Hinweis auf kognitive Einschränkung. Ihr Gehirn steuert Bewegungsabläufe sicher."; }
+    else if(d.dem >= TEST_LEICHT) { demText = "Leichte kognitive Leistungsminderung. Dies verzögert oft motorische Reaktionen und erhöht das Sturzrisiko leicht."; }
+    else if(d.dem >= TEST_VERDACHT) { demText = "Verdacht auf kognitive Einschränkung. Das Gehirn kann komplexe Umgebungsreize nicht mehr schnell genug verarbeiten. Das Sturzrisiko steigt signifikant. Eine zeitnahe fachärztliche (neurologische oder psychiatrische) Abklärung wird dringend empfohlen."; }
+    else if(d.dem >= 10) { demText = "Verdacht auf mittelschwere Demenz. Hier steht die Sturzprävention durch Umgebungsanpassung im absoluten Fokus."; }
+    else { demText = "Verdacht auf schwere Demenz. Engmaschige Betreuung und pflegerische Maßnahmen zur Sturzprophylaxe sind zwingend."; }
+
+    const params = [
+        { title: 'Körpergewicht-Index (BMI)', val: bmi.toFixed(1), unit: '', 
+          status: bmi > 35 ? 'red' : (bmi >= 30 || bmi < 20) ? 'yellow' : (bmi >= 25) ? 'yellow' : 'green', 
+          norm: 'Der BMI zeigt ein ausgewogenes Verhältnis. Ihr Herz arbeitet ohne mechanische Überlastung.', 
+          warning: `<strong>Bewertung:</strong> Der BMI liegt im Bereich der Adipositas Grad I (${bmi.toFixed(1)}). Die mechanische Belastung der Gelenke ist erhöht, die Mobilität kann eingeschränkt sein.<br><strong>Wo liegen die Reserven?</strong> Bereits eine moderate Gewichtsreduktion von 5–10% verbessert Blutdruck, Gelenkbelastung und Beweglichkeit messbar. Proteinreiche Ernährung schützt dabei den Muskelerhalt.`,
+          analysis: `<strong>Bewertung:</strong> Abweichung vom Normbereich. Ein veränderter BMI erhöht die Herzkreislaufbelastung und kann die Mobilität beeinträchtigen.<br><strong>Wo liegen die Reserven?</strong> Eine Gewichtsregulation verbessert Blutdruck und Gelenkbelastung messbar. Eine proteinreiche Ernährung unterstützt dabei den Muskelerhalt.` },
+        { title: 'Blutdruck (RR)', val: `${d.sys}/${d.dia}`, unit: 'mmHg',
+          status: (d.sys > 140 || d.dia > 90) ? 'red'
+                : (d.sys < 90 || d.dia < 50) ? 'red'
+                : (d.sys >= 130 || d.dia >= 85) ? 'yellow'
+                : 'green',
+          norm: 'Ihr Blutdruck liegt in einem organschonenden Bereich.',
+          warning: `<strong>Bewertung:</strong> Der Blutdruck liegt im hochnormalen Bereich (${d.sys}/${d.dia} mmHg). Ohne Gegenmaßnahmen entwickelt sich daraus häufig eine behandlungsbedürftige Hypertonie.<br><strong>Wo liegen die Reserven?</strong> Jetzt ist der optimale Zeitpunkt für nicht-medikamentöse Maßnahmen: Kochsalzreduktion, DASH-Diät und regelmäßiges Ausdauertraining können den Druck dauerhaft im grünen Bereich halten.`,
+          analysis: (d.sys < 90 || d.dia < 50)
+            ? `<strong>Bewertung:</strong> Hypotonie (${d.sys}/${d.dia} mmHg). Ein zu niedriger Blutdruck erhöht das Schwindel- und Sturzrisiko durch zerebrale Minderperfusion erheblich.<br><strong>Wo liegen die Reserven?</strong> Ursachenabklärung (Medikamente, Volumenmangel, kardiale Ursachen) und ausreichende Hydratation sind prioritär. Ärztliche Abklärung wird dringend empfohlen.`
+            : `<strong>Bewertung:</strong> Systolische Hypertonie (${d.sys} mmHg) ist der wichtigste Risikofaktor für kardiovaskuläre Ereignisse.<br><strong>Wo liegen die Reserven?</strong> Angepasstes Ausdauertraining und Kochsalzreduktion können den Druck nachweislich senken. Eine Rücksprache mit dem behandelnden Arzt bezüglich der Medikation wird empfohlen.` },
+        { title: 'Ader-Hammer (Amplitude)', val: amp, unit: 'mmHg',
+          status: amp > 60 ? 'red' : amp >= 55 ? 'yellow' : 'green',
+          norm: 'Eine normale Amplitude (unter 55 mmHg) zeigt intakte, elastische Gefäße.',
+          warning: `<strong>Bewertung:</strong> Der Pulsdruck liegt im hochnormalen Bereich (${amp} mmHg). Dies kann ein frühes Zeichen beginnender arterieller Steifigkeit sein – die Gefäßwände verlieren allmählich ihre Elastizität.<br><strong>Wo liegen die Reserven?</strong> Jetzt ist der optimale Zeitpunkt gegenzusteuern: Ausdauertraining, Gewichtsreduktion und Kochsalzreduktion können die Gefäßelastizität nachweislich verbessern.`,
+          analysis: `<strong>Bewertung:</strong> Ein Pulsdruck von über 60 mmHg zeigt eine deutliche arterielle Steifigkeit. Die kardiale Nachlast ist erhöht, das Risiko für Herzinfarkt und Schlaganfall steigt messbar.<br><strong>Wo liegen die Reserven?</strong> Gefäßsteifigkeit ist durch konsequentes Ausdauertraining und Ernährungsanpassung modulierbar. Ärztliche Rücksprache zur medikamentösen Optimierung empfohlen.` },
+        { title: 'Nikotinlast (Pack-Years)', val: py.toFixed(1), unit: 'py', status: py > 40 ? 'red' : py > 20 ? 'yellow' : 'green', norm: 'Rauchfrei bzw. unauffällige Nikotin-Historie. Ihre Gefäße und Lungenbläschen sind vor Toxinen geschützt.', analysis: `<strong>Bewertung:</strong> Eine kumulierte Nikotinlast von ${py.toFixed(1)} Pack-Years ist ein massiver Treiber für die vaskuläre Alterung und Arteriosklerose.<br><strong>Wo liegen die Reserven?</strong> Ein Rauchstopp ist in jedem Alter der stärkste Hebel, um das Risiko für Herzinfarkt und Schlaganfall sofort zu senken.` },
+        { title: 'Pack-An-Power (Handkraft)', val: d.gr, unit: 'kg', status: d.gr < gripT ? 'red' : 'green', norm: `Mit ${d.gr} kg liegt die Handkraft über dem Normwert für Ihr Alter und Geschlecht (≥${gripT} kg). Ein gutes Zeichen für erhaltene Muskelkraft.`, analysis: `<strong>Bewertung:</strong> Dieser Wert unterschreitet den Normwert für Ihr Alter und Geschlecht (≥${gripT} kg). Dies ist ein Indikator für altersbedingten Muskelabbau (Sarkopenie).<br><strong>Wo liegen die Reserven?</strong> Progressives Krafttraining und eine optimierte Proteinzufuhr (≥1,2 g/kg Körpergewicht/Tag) können diesem Abbau aktiv entgegenwirken.` },
+        { title: 'Kognition (Eigenentwickelter Orientierungstest)', val: d.dem, unit: 'Pkt',
+          status: d.dem <= 22 ? 'red' : d.dem <= 26 ? 'yellow' : 'green',
+          norm: demText,
+          warning: `<strong>Bewertung:</strong> Das Testergebnis liegt im Bereich einer leichten kognitiven Leistungsminderung (${d.dem}/30 Pkt). Reaktionen können verlangsamt sein, das Sturzrisiko ist leicht erhöht.<br><strong>Wo liegen die Reserven?</strong> Regelmäßige kognitive Aktivität (Lesen, soziale Kontakte, neue Aufgaben) und Bewegung wirken dem Abbau nachweislich entgegen. Eine ärztliche Verlaufskontrolle in 6–12 Monaten wird empfohlen.`,
+          analysis: `<strong>Bewertung:</strong> ${demText}<br><strong>Wo liegen die Reserven?</strong> Kognitive Einbußen korrelieren direkt mit einer verminderten Dual-Tasking-Fähigkeit beim Gehen. Ein neurologisches Follow-up sowie der Abbau von Stolperfallen im Haushalt sind prioritär.` },
+        { title: 'Aufsteh-Kraft (Chair Rise)', val: d.ch, unit: 's', status: d.ch > chairT ? 'red' : 'green', norm: 'Sie erheben sich mühelos, was ein Zeichen für gute funktionelle Kraft ist.', analysis: `<strong>Bewertung:</strong> Die Zeit für das Aufstehen ist verlängert (Normwert für Ihr Alter: unter ${chairT}s). Dies deutet auf eine funktionelle Schwäche der hüftumgreifenden Muskulatur hin.<br><strong>Wo liegen die Reserven?</strong> Gezieltes Beinkrafttraining und Balanceübungen gelten als hochwirksame Maßnahmen für die Alltagsmobilität.` },
+        { title: 'Schwindel-Check (Orthostase)', val: d.rro, unit: 'mmHg', status: d.rro > 20 ? 'red' : 'green', norm: 'Ihr Blutdruck bleibt beim Aufstehen stabil. Das schützt vor Schwindel.', analysis: `<strong>Bewertung:</strong> Ein orthostatischer Blutdruckabfall von über 20 mmHg erhöht das Sturzrisiko durch kurzzeitige zerebrale Minderperfusion erheblich.<br><strong>Wo liegen die Reserven?</strong> Langsames Aufstehen, Hydratation und ein ärztliches Medikamenten-Review.` },
+        { title: 'Durchblutungs-Radar (PI)', val: Number(d.pi).toFixed(1), unit: '', status: d.pi < 1.5 ? 'red' : 'green', norm: 'Ein Wert ab 1.5 spricht für eine gute Durchblutung bis in die feinsten Kapillaren.', analysis: `<strong>Bewertung:</strong> Ein PI unter 1.5 deutet auf eine eingeschränkte periphere Mikrozirkulation hin.<br><strong>Wo liegen die Reserven?</strong> Intervall-Gehtraining und Optimierung kardiovaskulärer Risikofaktoren verbessern die periphere Durchblutung.` },
+        { title: 'Sauerstoff-Tank (SpO2)', val: d.o2, unit: '%', status: d.o2 < 95 ? 'red' : 'green', norm: 'Ihre Blutsättigung ist optimal, Ihr Gehirn erhält ausreichend Treibstoff.', analysis: `<strong>Bewertung:</strong> Eine verringerte Sättigung in Ruhe weist auf reduzierte kardiopulmonale Reserven hin.<br><strong>Wo liegen die Reserven?</strong> Eine ärztliche Abklärung (z.B. Lunge/Schlafapnoe) und gezielte Atemgymnastik werden empfohlen.` },
+        { title: 'Taktgeber (Ruhepuls)', val: d.hr, unit: 'bpm',
+          status: (d.hr > 80 || d.hr < 50) ? 'red' : 'green',
+          norm: 'Ein ruhiger Herzschlag im Normbereich schont den Herzmuskel und zeigt eine gute kardiale Ökonomie.',
+          analysis: d.hr > 80
+            ? `<strong>Bewertung:</strong> Tachykardie (${d.hr} bpm). Ein dauerhaft erhöhter Ruhepuls ist ein Hinweis auf erhöhte sympathische Aktivierung, mögliche Herzinsuffizienz, Anämie oder Schilddrüsenüberfunktion.<br><strong>Wo liegen die Reserven?</strong> EKG-Abklärung empfohlen. Moderates Ausdauertraining senkt den Ruhepuls nachweislich. Stressreduktion und Schlafhygiene unterstützen die vagale Regulation.`
+            : `<strong>Bewertung:</strong> Bradykardie (${d.hr} bpm). Ein dauerhaft niedriger Ruhepuls kann medikamentös bedingt sein (Betablocker, Kalziumantagonisten), auf einen AV-Block hinweisen oder Ausdruck eines Sick-Sinus-Syndroms sein.<br><strong>Wo liegen die Reserven?</strong> EKG und Langzeit-EKG zur Abklärung empfohlen. Medikamentenreview durch behandelnden Arzt prioritär.` },
+        { title: 'Polypharmazie (≥ 5 Med.)', val: d.poly == 1 ? "Ja" : "Nein", unit: '', status: d.poly == 1 ? 'red' : 'green', norm: 'Ihre Medikation ist übersichtlich, das Risiko für Wechselwirkungen minimal.', analysis: `<strong>Bewertung:</strong> Die Einnahme von fünf oder mehr Medikamenten ist ein starker Risikofaktor für Stürze und Interaktionen.<br><strong>Wo liegen die Reserven?</strong> Ärztliches Medikamentenreview zur Reduktion sturzfördernder Substanzen.` },
+        { title: 'Sturz-Historie', val: d.fall == 1 ? "Ja" : "Nein", unit: '', status: d.fall == 1 ? 'red' : 'green', norm: 'Sie bewegen sich sicher und sturzfrei durch Ihren Alltag.', analysis: `<strong>Bewertung:</strong> Ein zurückliegendes Sturzereignis ist das stärkste Warnsignal für zukünftige Frakturen.<br><strong>Wo liegen die Reserven?</strong> Aktives Gegensteuern durch multimodales Training (Kraft + Balance) und Wohnraumanpassung.` },
+        { title: 'Sehvermögen (R / L)', val: `${d.seeR} / ${d.seeL}`, unit: 'Pkt', status: (Number(d.seeR) + Number(d.seeL)) <= 4 ? 'red' : (Number(d.seeR) + Number(d.seeL)) <= 6 ? 'yellow' : 'green', norm: 'Das Sehvermögen ist beidseitig gut – ein wichtiger Schutzfaktor vor Stürzen und Hindernissen.', analysis: `<strong>Bewertung:</strong> Eingeschränktes Sehvermögen erhöht das Sturzrisiko erheblich – Hindernisse und Bodenunebenheiten werden nicht rechtzeitig erkannt.<br><strong>Wo liegen die Reserven?</strong> Augenärztliche Kontrolle und ggf. Sehhilfenanpassung sind prioritär. Gute Beleuchtung im Haushalt reduziert das Risiko sofort und kostenlos.` },
+        { title: 'Doppelbilder', 
+          val: d.diplop === 0 ? 'Keine' : d.diplop === 1 ? 'Einseitig' : 'Beidseitig', 
+          unit: '',
+          status: d.diplop === 2 ? 'red' : d.diplop === 1 ? 'yellow' : 'green',
+          norm: 'Kein Doppelbildsehen – Tiefenwahrnehmung und Raumerfassung sind ungestört.',
+          warning: `<strong>Bewertung:</strong> Einseitige Doppelbilder. Mögliche Ursachen: Linsentrübung, Hornhautveränderung oder Astigmatismus. Die Tiefenwahrnehmung ist eingeschränkt, was das Sturzrisiko bei Treppen und unebenen Böden erhöht.<br><strong>Wo liegen die Reserven?</strong> Augenärztliche Abklärung zur Ursachenfindung empfohlen.`,
+          analysis: `<strong>Bewertung:</strong> Beidseitige Doppelbilder sind ein ernstes neurologisches oder ophthalmologisches Warnsignal. Sie stören die Raumwahrnehmung massiv und erhöhen das Sturzrisiko erheblich.<br><strong>Wo liegen die Reserven?</strong> Dringende augenärztliche und ggf. neurologische Abklärung erforderlich. Sofortige Sicherheitsmaßnahmen im Haushalt einleiten.` },
+        { title: 'Amsler-Gitter-Test', 
+          val: d.amsler === 0 ? 'Unauffällig' : d.amsler === 1 ? 'Verzerrungen an den Rändern' : 'Erhebliche Verzerrungen / leere Stellen', 
+          unit: '',
+          status: d.amsler === 2 ? 'red' : d.amsler === 1 ? 'yellow' : 'green',
+          norm: 'Amsler-Gitter unauffällig – Makula-Funktion und Zentralsicht intakt.',
+          warning: `<strong>Bewertung:</strong> Verzerrungen an den Rändern oder unvollständige Linien im Amsler-Test deuten auf eine beginnende Makulaveränderung hin. Kontrast- und Zentralwahrnehmung können beeinträchtigt sein.<br><strong>Wo liegen die Reserven?</strong> Augenärztliche Kontrolle (OCT) zur Früherkennung einer Makuladegeneration empfohlen.`,
+          analysis: `<strong>Bewertung:</strong> Erhebliche Verzerrungen oder leere Stellen im Amsler-Test weisen auf eine fortgeschrittene Makulapathologie hin (z.B. AMD, Makulaödem). Alltagsgegenstände und Stufen werden verzerrt oder gar nicht wahrgenommen – Sturzrisiko stark erhöht.<br><strong>Wo liegen die Reserven?</strong> Dringende ophthalmologische Abklärung. Sofortige Wohnraumanpassung (Kontrastverstärkung, Beleuchtung) empfohlen.` },
+        { title: 'Hörvermögen', val: d.hear, unit: 'Pkt', status: d.hear <= 1 ? 'red' : d.hear <= 2 ? 'yellow' : 'green', norm: 'Das Hörvermögen ist unauffällig – akustische Warnsignale und Gesprächspartner werden zuverlässig wahrgenommen.', analysis: `<strong>Bewertung:</strong> Eingeschränktes Hörvermögen erhöht die kognitive Last beim Gehen und ist ein eigenständiger Sturzrisikofaktor. Soziale Isolation durch Schwerhörigkeit beschleunigt zusätzlich den kognitiven Abbau.<br><strong>Wo liegen die Reserven?</strong> HNO-Abklärung und Hörgeräteversorgung können Sturzrisiko und Lebensqualität messbar verbessern.` }
+    ];
+
+    let html = "";
+    params.forEach(p => {
+        let vCl = p.status === 'red' ? 'val-red' : p.status === 'yellow' ? 'val-yellow' : 'val-normal';
+        let bCl = p.status === 'red' ? 'param-analysis' : p.status === 'yellow' ? 'param-warning' : 'param-ok';
+        html += `<div class="param-row"><span class="param-title">${p.title}:</span> <span class="${vCl}">${p.val} ${p.unit}</span><div class="${bCl}">${p.status === 'red' ? p.analysis : p.status === 'yellow' ? (p.warning || p.analysis) : p.norm}</div></div>`;
+    });
+    document.getElementById('dynamic-parameters-list').innerHTML = html;
+
+    document.getElementById('fall-risk-print').innerHTML = `Orientierungswert: ${sturzS}/16 Pkt. Zusammensetzung aus Sturzhistorie (4), Orthostase (3), Polypharmazie (2), Kognition (2), Sinnesleistung (3) und visuelle Qualität / Doppelbilder (2).<br><em>Sofern zutreffend, finden Sie detaillierte Übungsanleitungen zur Sturzprophylaxe in den Folgekapiteln.</em>`;
+    
+    let wText = "";
+    if (cTot === 'green') {
+        wText = "Die heutige Untersuchung zeigt eine erfreulich hohe kardiopulmonale und neuromuskuläre Stabilität. Konkret bedeutet das: Ihr Herz-Lungen-System arbeitet wirtschaftlich und das Zusammenspiel von Nerven und Muskeln funktioniert einwandfrei. Ihr Körper zeigt eine hervorragende Kompensationsfähigkeit – er kann Belastungen im Alltag also noch sehr gut ausgleichen. Unser Ziel ist es nun, diese biologische Resilienz (Ihre körperliche Widerstandskraft) durch leichte, aber regelmäßige Reize lange zu erhalten.";
+    } else if (cTot === 'yellow') {
+        wText = "Die Auswertung zeigt insgesamt noch gute Basisreserven, weist aber auf ein sogenanntes prä-frailes Profil hin – das ist die medizinische Bezeichnung für eine beginnende, noch gut umkehrbare Gebrechlichkeit. Wir messen hier erste funktionelle Defizite, beispielsweise in der hämodynamischen Regulation (Ihrer Kreislaufsteuerung beim Aufstehen) oder der muskulären Kraftübertragung. Das ist kein Grund zur Sorge, aber ein wichtiges Warnsignal Ihres Körpers: Wenn wir jetzt nicht gezielt gegensteuern, droht auf Dauer ein Verlust Ihrer Mobilität. Genau hier setzen unsere heutigen Empfehlungen an.";
+    } else {
+        wText = "Die aktuellen Befunde zeigen eine deutliche Vulnerabilität (Anfälligkeit) und eine Einschränkung Ihrer körperlichen Reserven. Die Messwerte deuten auf eine fortgeschrittene Sarkopenie – also einen spürbaren altersbedingten Muskelschwund – hin, gepaart mit Belastungen des Herz-Kreislauf-Systems. Dieses Ungleichgewicht beeinträchtigt Ihre posturale Kontrolle (Ihre Haltungssicherheit und das Gleichgewicht) und erhöht das Risiko für Stürze und schnelle Erschöpfung merklich. Hier besteht nun ein klarer ärztlicher Handlungsbedarf: Im absoluten Fokus stehen jetzt Schutzmaßnahmen für den Alltag und die Stabilisierung Ihres Kreislaufs, um Ihre Selbstständigkeit zu Hause abzusichern.";
+    }
+    
+    document.getElementById('auto-narrative-text').innerHTML = `<strong>Status:</strong> ${wText}`;
+    document.getElementById('status-boxes').innerHTML = `H: ${hexC.cH} | M: ${hexC.cM} | C: ${hexC.cC} | S: ${hexC.cS} <br><strong style="font-size:12px;">VITAL-INDEX: ${total}/30</strong>`;
+    
+    document.getElementById('manual-expert-text').innerHTML = `<strong>Ergänzende ärztliche Bewertung:</strong> ${sanitize(document.getElementById('p-comment').value) || "Wir haben heute ein Fundament zur aktiven Prävention geschaffen. Die Umsetzung der Ziele sichert Ihre Mobilität."}`;
+
+    let selectedGoals = [];
+    document.querySelectorAll('.smart-btn.active').forEach(btn => {
+        let parentText = btn.parentElement.previousElementSibling ? btn.parentElement.previousElementSibling.innerText : "Fokus";
+        selectedGoals.push({ text: btn.innerText, parent: parentText });
+    });
+    let triadHtml = "";
+    if (selectedGoals.length > 0) {
+        triadHtml += "<strong>Die priorisierten Maßnahmen mit dem größten kombinierten Reservepotenzial bei Ihrem Profil:</strong><ul>";
+        selectedGoals.slice(0,3).forEach(g => { triadHtml += `<li class="highlight-goal">${sanitize(g.parent)}: ${sanitize(g.text)}</li>`; });
+        triadHtml += "</ul>";
+    }
+    document.getElementById('prognostic-triad').innerHTML = triadHtml;
+
+    let goalsList = ""; 
+    document.querySelectorAll('.smart-btn.active').forEach(b => goalsList += `<li>${sanitize(b.innerText)}</li>`);
+    document.querySelectorAll('.free-text-input').forEach(input => { 
+        if(input.value.trim() !== "") goalsList += `<li>${sanitize(input.value.trim())}</li>`; 
+    });
+    document.getElementById('pat-goals-print').innerHTML = goalsList ? `<ul>${goalsList}</ul>` : "<p>Keine spezifischen Ziele markiert.</p>";
+
+    let extraChaptersHtml = "";
+    let chapNum = 5;
+
+    if (cM !== 'green' || sturzS > 3) {
+        extraChaptersHtml += `<h2>${chapNum}. Übungsprogramm zur Sturzprophylaxe</h2>`;
+        extraChaptersHtml += `<div class="box-print" style="border-left: 6px solid #ff3b30 !important;">
+            <strong style="color:#ff3b30;">Wichtige Sicherheitshinweise:</strong><br>
+            • Bei neuem, stark zunehmendem Schwindel, neurologischen Ausfällen, Doppelbildern oder Gangunsicherheit ist eine sofortige ärztliche Abklärung zwingend.<br>
+            • Übungen bei benignem Lagerungsschwindel (BPLS), Polyneuropathie oder Orthostase nur nach ärztlicher Rücksprache anpassen.<br>
+            • <strong>WICHTIG für ALLE Übungen:</strong> Immer einen stabilen Stuhl oder eine Wand in Griffnähe zur Sicherung nutzen!
+        </div>
+        <div class="exercise-box"><strong>1. Sicherer Stand mit Gewichtsverlagerung</strong><br>Ziel: Aktivierung von Körperschema und Gleichgewicht.<br>• Hinter stabilen Stuhl stellen, festhalten. Gewicht langsam von rechts nach links, danach vor und zurück verlagern (je 10–15 Wdh.).<br>• <em>Bewegung langsam ausführen. Kein ruckartiges Drehen.</em></div>
+        <div class="exercise-box"><strong>2. Fersen- und Zehenstand am Stuhl</strong><br>Ziel: Sprunggelenkstabilität zur Sturzvermeidung.<br>• Am Stuhl festhalten. Langsam auf Zehenspitzen (5 Sek. halten), absenken, dann Fersen anheben (10 Wdh.).</div>
+        <div class="exercise-box"><strong>3. Sitzend: Kopfbewegung gegen Schwindel</strong><br>Ziel: Vestibuläre Anpassung.<br>• Aufrecht sitzen, Punkt an Wand fixieren. Kopf langsam rechts/links drehen, Blick bleibt fixiert (30 Sek.).<br>• <em>Wichtig: Nur leichte Symptome erlaubt. Bei starkem Schwindel sofort abbrechen.</em></div>
+        <div class="exercise-box"><strong>4. Sit-to-Stand (Aufstehen vom Stuhl)</strong><br>Ziel: Alltagstraining und Kreislaufanpassung.<br>• Vom Stuhl ohne Schwung aufstehen und langsam wieder setzen (8–12 Wdh.).</div>
+        <div class="exercise-box"><strong>5. Breiter Stand mit geschlossenen Augen</strong><br>Ziel: Training des propriozeptiven Systems (nur bei sicherem Stand!).<br>• Füße hüftbreit, Hände am Stuhl zur Sicherung. Augen für 5–10 Sekunden schließen.</div>
+        <div style="font-size: 9.5px; margin-bottom: 15px; font-style: italic;">Hinweis: Kontrollierte, milde Reize verbessern die zentrale Kompensation. Vermeiden Sie jedoch schnelle Drehbewegungen, instabile Unterlagen oder Übungen ohne Sicherung. Trainieren Sie immer entsprechend Ihrer Tagesform.</div>`;
+        chapNum++;
+    }
+
+    if (cH !== 'green') {
+        extraChaptersHtml += `<h2>${chapNum}. Medizinisches Herz-Kreislauf-Training (Ü70)</h2>`;
+        extraChaptersHtml += `<div style="font-size: 10.5px; margin-bottom: 8px; line-height: 1.4;">Herz-Kreislauf-Training ist im Alter kein „Bonus“, sondern Medizin: Es sorgt für eine bessere Durchblutung, ein geringeres Sturzrisiko sowie ein reduziertes Demenz- und Infarktrisiko. Moderat, regelmäßig, sicher.<br><strong>Zielbereich:</strong> Leicht bis moderat belastend → man kann noch sprechen, aber nicht mehr singen.<br><strong>Dauer:</strong> 10–30 Minuten, 3–5× pro Woche.</div>
+        <div class="box-print" style="border-left: 6px solid #ff3b30 !important;"><strong style="color:#ff3b30;">Wichtige medizinische Warnhinweise:</strong><br>• <strong>Nicht trainieren bei:</strong> akuter Infektion, instabiler Angina Pectoris, frischem Herzinfarkt oder unkontrolliertem Bluthochdruck.<br>• <strong>Sofort abbrechen bei:</strong> Brustschmerz, Luftnot über Maß, Schwindel oder kaltem Schweiß!</div>
+        <div class="exercise-box"><strong>1. Gehen auf der Stelle (mit Halt)</strong><br>Ziel: Sehr gut bei Unsicherheit draußen.<br>• Hinter einem Stuhl stehen und festhalten. Abwechselnd Knie leicht anheben.<br>• 1–3 Minuten üben, Pause machen, insgesamt 2–3 Durchgänge.</div>
+        <div class="exercise-box"><strong>2. Zügiges Gehen (draußen oder im Flur)</strong><br>Ziel: Das effektivste und unterschätzteste Training.<br>• 10–20 Minuten in aufrechter Haltung bei leicht erhöhter Atemfrequenz gehen.<br>• <em>Bei Gleichgewichtsproblemen:</em> Unbedingt Gehstock oder Walkingstöcke nutzen.</div>
+        <div class="exercise-box"><strong>3. Sitzgymnastik mit Armbewegung</strong><br>Ziel: Gut bei Schwindel oder Gangunsicherheit. Die Herzfrequenz steigt sanft an.<br>• Im Sitzen Arme rhythmisch heben und senken (optional mit kleinen Gewichten).<br>• 2–5 Minuten durchgehend ausführen.</div>
+        <div class="exercise-box"><strong>4. Stufensteigen (wenn sicher möglich!)</strong><br>Ziel: Sehr wirksam, stärkt Herz und Beinmuskulatur.<br>• Nur mit Geländer! 1–2 Minuten langsam hoch und runter steigen. Pause, 2–3 Durchgänge.<br>• <em>Achtung: Nicht bei starkem Schwindel anwenden.</em></div>
+        <div class="exercise-box"><strong>5. Atemaktivierung (ergänzend)</strong><br>Ziel: Verbessert die vagale Regulation und Belastungstoleranz.<br>• Aufrecht sitzen. 4 Sekunden lang einatmen, 6 Sekunden lang ausatmen. 10 Wiederholungen.</div><div style="margin-bottom: 15px;"></div>`;
+        chapNum++;
+    }
+
+    if (cTot !== 'green') {
+        extraChaptersHtml += `<h2>${chapNum}. Vitalität & Energie im Alltag</h2>`;
+        extraChaptersHtml += `<div style="font-size: 10.5px; margin-bottom: 8px; line-height: 1.4;">„Vitalität“ ist kein esoterischer Begriff, sondern das physiologische Ergebnis von drei Faktoren: Bewegung, Atmung und Reizwechsel. Was nachweislich wirkt: moderates Krafttraining, leichtes Ausdauertraining, Mobilisation und bewusste Atmung. Alles andere ist Beiwerk.<br><strong>Ehrlich gesagt:</strong> Vitalität entsteht nicht durch einzelne perfekte Einheiten, sondern durch Regelmäßigkeit. 20 Minuten täglich schlagen 90 Minuten einmal pro Woche.</div>
+        <div class="exercise-box"><strong>1. Zügiges Gehen – der unterschätzte Klassiker</strong><br>Verbessert Durchblutung, Stimmung, Schlaf und Insulinsensitivität. Das ist die Basis.<br>• 15–30 Minuten, idealerweise bei Tageslicht.<br>• <em>Tempo:</em> So, dass man noch sprechen, aber nicht mehr singen kann.</div>
+        <div class="exercise-box"><strong>2. Große Muskelgruppen aktivieren (Mini-Kraftblock)</strong><br>Muskelaktivierung setzt einen hormonellen Stimulus und erzeugt mehr Energiegefühl.<br>• Kniebeugen (oder Aufstehen vom Stuhl), Wandliegestütze, Hüftstreckung im Stand und Schulterheben mit leichten Gewichten.<br>• <em>Dosierung:</em> Je 8–12 Wiederholungen, 2 Durchgänge.</div>
+        <div class="exercise-box"><strong>3. Atem-Reset (Parasympathische Aktivierung)</strong><br>Reduziert das Stressniveau messbar.<br>• 4 Sekunden einatmen, 6 Sekunden ausatmen. Für 2–3 Minuten durchführen.</div>
+        <div class="exercise-box"><strong>4. Mobilisationssequenz (5 Minuten)</strong><br>• Schulterkreisen, sanfte Rumpfdrehung, Hüftkreisen und Nackenmobilisation.<br>• <em>Ausführung:</em> Langsam, fließend und ohne Schmerz.</div>
+        <div class="exercise-box"><strong>5. Koordination & Neurologie</strong><br>Koordinative Reize steigern die subjektive Wachheit stärker als monotones Training.<br>• <em>Beispiel:</em> Rechte Hand tippt auf linke Schulter, dann umgekehrt – im fliegenden Wechsel.</div>
+        <div class="box-print" style="border-left: 6px solid #34c759 !important; margin-top: 10px; margin-bottom: 15px;"><strong style="color:#34c759;">Die 20-Minuten-Formel für den Alltag:</strong><br>Wenn Sie es strukturiert möchten, reicht dies völlig aus:<br>1. <strong>5 Minuten:</strong> Mobilisieren<br>2. <strong>10 Minuten:</strong> Kraft & leichtes Cardio kombiniert<br>3. <strong>3 Minuten:</strong> Atmung (Atem-Reset)<br>4. <strong>2 Minuten:</strong> Bewusstes Stehen und Nachspüren</div>`;
+        chapNum++;
+    }
+
+    if (d.dem <= 22) {
+        extraChaptersHtml += `<h2>${chapNum}. Bewegung bei kognitiver Leistungsminderung</h2>`;
+        extraChaptersHtml += `<div class="box-print" style="border-left: 6px solid #007aff !important; margin-bottom: 10px;">
+            Bei beginnender Demenz geht es nicht um „Heilung“, sondern um Erhalt von Funktion, Struktur und Selbstständigkeit. Bewegung wirkt nachweislich günstig auf Durchblutung, Neuroplastizität und Alltagskompetenz – aber nur, wenn sie einfach, regelmäßig und ritualisiert ist.<br><br>
+            <strong>Wichtig:</strong><br>
+            • Klare, kurze Anweisungen<br>
+            • Immer gleiche Reihenfolge<br>
+            • Ruhige Umgebung<br>
+            • Erfolgserlebnisse statt Überforderung
+        </div>
+        <div class="exercise-box"><strong>1. Gehen mit Aufgaben (Dual-Task leicht)</strong><br>Ziel: Kombination von Bewegung + Denken<br>• Langsam durch den Raum gehen. Dabei z.B. Wochentage aufzählen oder bei jedem dritten Schritt klatschen.<br>• <em>Nicht zu komplex. Bei Überforderung sofort vereinfachen.</em></div>
+        <div class="exercise-box"><strong>2. Sitzgymnastik mit Rhythmus</strong><br>Ziel: Motorik + Rhythmusgefühl<br>• Im Sitzen Arme im Takt heben. Mit vertrauter Musik (biografisch wichtig!). 5 Minuten.<br>• <em>Musik aktiviert oft erstaunlich gut.</em></div>
+        <div class="exercise-box"><strong>3. Sit-to-Stand (funktionell)</strong><br>• Vom Stuhl aufstehen, wieder setzen. 8–10 Wiederholungen.<br>• <em>Erhält Alltagsfähigkeit.</em></div>
+        <div class="exercise-box"><strong>4. Greif- und Koordinationsübungen</strong><br>• Ball von Hand zu Hand geben, Tuch falten, große Perlen sortieren.<br>• <em>Feinmotorik bleibt länger erhalten, wenn sie genutzt wird.</em></div>
+        <div class="exercise-box"><strong>5. Einfache Balanceübung am Stuhl</strong><br>• Am Stuhl festhalten, Gewicht langsam verlagern. 1–2 Minuten.<br>• <em>Keine komplexen Einbeinübungen.</em></div>
+        <div class="box-print" style="border-left: 6px solid #34c759 !important; margin-top: 10px; margin-bottom: 15px;">
+            <strong style="color:#34c759;">Was wirklich entscheidend ist:</strong><br>
+            Bei beginnender Demenz zählt:<br>
+            • Regelmäßigkeit > Intensität<br>
+            • Emotionale Sicherheit > sportlicher Anspruch<br>
+            • Bewegung in Alltagsroutinen einbauen<br><br>
+            <strong>Beispiel:</strong> Jeden Morgen 10 Minuten, immer gleiche Musik, immer gleiche Reihenfolge.<br>
+            <em>Und ganz klar: Rückzug und Inaktivität beschleunigen den Abbau.</em>
+        </div>`;
+        chapNum++;
+    }
+
+    document.getElementById('dynamic-extra-chapters').innerHTML = extraChaptersHtml;
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.print();
+            printBtn.innerText = 'BERICHT DRUCKEN';
+            printBtn.disabled = false;
+        });
+    });
+}
+</script>
+</body>
+</html>
