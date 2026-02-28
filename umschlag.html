@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kopf-Aktiv Erfurt – Die drei Briefumschläge</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f2f5; min-height: 100vh; display: flex; justify-content: center; padding: 20px; font-family: Arial, sans-serif; }
+    #root { width: 100%; max-width: 700px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const GRUEN      = "#2D6A4F";
+    const GRUEN_HELL = "#D8EFE0";
+    const GRUEN_MIT  = "#40916C";
+    const BLAU       = "#1D6A96";
+    const BLAU_HELL  = "#D6EAF8";
+    const LILA       = "#6C3483";
+    const LILA_HELL  = "#E8DAEF";
+    const ORANGE     = "#E67E22";
+    const GRAU       = "#F4F6F7";
+    const GRAU_D     = "#5D6D7E";
+    const SCHWARZ    = "#1A1A1A";
+
+    const SZENARIEN = {
+      pg2: { label: "Pflegegrad 2", umschlag1: 332,  umschlag2: 850,  umschlag3: 131, preis: 469 },
+      pg3: { label: "Pflegegrad 3", umschlag1: 573,  umschlag2: 1298, umschlag3: 131, preis: 699 },
+    };
+
+    const STRATEGIE = {
+      A: { label: "Strategie A", sub: "Kein Pflegedienst",    icon: "👨‍👩‍👧", nutzung2: 0,   beschreibung: "Umschlag 2 bleibt ungeöffnet. Kein Pflegedienst. Die Familie pflegt selbst." },
+      B: { label: "Strategie B", sub: "Kleiner Pflegedienst", icon: "🏥",    nutzung2: 0.1, beschreibung: 'Umschlag 2 zu 10 % für einen kleinen Pflegedienst nutzen – das "öffnet" die Umwandlung.' },
+    };
+
+    function Umschlag({ farbe, farbeHell, emoji, titel, betrag, offen, inhaltInfo }) {
+      return (
+        <div style={{
+          border: `2px solid ${farbe}`,
+          borderRadius: 12,
+          backgroundColor: offen ? farbeHell : "#fff",
+          padding: "14px 12px",
+          textAlign: "center",
+          transition: "all 0.3s",
+          boxShadow: offen ? `0 4px 12px ${farbe}44` : "0 2px 6px rgba(0,0,0,0.06)",
+          position: "relative",
+          flex: 1,
+        }}>
+          {/* Brieflasche */}
+          <div style={{
+            position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)",
+            width: 0, height: 0,
+            borderLeft: "22px solid transparent",
+            borderRight: "22px solid transparent",
+            borderTop: offen ? "none" : `14px solid ${farbe}`,
+          }} />
+          <div style={{ fontSize: 28, marginBottom: 4, marginTop: 10 }}>{emoji}</div>
+          <div style={{ fontSize: 11, fontWeight: "bold", color: farbe, marginBottom: 4, lineHeight: 1.3 }}>{titel}</div>
+          <div style={{ fontSize: 20, fontWeight: "bold", color: offen ? farbe : GRAU_D }}>
+            {offen ? `${betrag} €` : "???"}
+          </div>
+          {offen && inhaltInfo && (
+            <div style={{ fontSize: 10, color: GRAU_D, marginTop: 4, lineHeight: 1.4 }}>{inhaltInfo}</div>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      const [pg,      setPg]      = useState("pg2");
+      const [strat,   setStrat]   = useState("A");
+      const [schritt, setSchritt] = useState(0);
+
+      const d = SZENARIEN[pg];
+      const s = STRATEGIE[strat];
+
+      const sachGenutzt      = Math.round(d.umschlag2 * s.nutzung2);
+      const sachRest         = d.umschlag2 - sachGenutzt;
+      const umwandlung       = s.nutzung2 > 0 ? Math.round(sachRest * 0.4) : 0;
+      const pflegegeldAnteil = s.nutzung2 > 0 ? Math.round(d.umschlag1 * (1 - s.nutzung2)) : d.umschlag1;
+      const kasseKA          = umwandlung + d.umschlag3;
+      const eigenanteil      = Math.max(0, d.preis - kasseKA);
+      const netto            = pflegegeldAnteil - eigenanteil;
+
+      const schritte = [
+        {
+          titel: "Der Staat schickt dir jeden Monat 3 Briefumschläge",
+          erklaerung: "Stell dir vor: Am 1. jeden Monats liegen drei Umschläge im Briefkasten. Jeder enthält Geld – aber mit unterschiedlichen Regeln, wie du es ausgeben darfst.",
+          zeige: [],
+        },
+        {
+          titel: "Umschlag 1 – Das freie Haushaltsgeld 💚",
+          erklaerung: `Dieser Umschlag enthält ${d.umschlag1} €. Das ist dein Pflegegeld. Du kannst damit machen was du willst – Lebensmittel kaufen, deiner Tochter geben die dich pflegt, sparen. Keine Einschränkungen. Diesen Umschlag lässt Kopf-Aktiv komplett in Ruhe.`,
+          zeige: ["1"],
+        },
+        {
+          titel: "Umschlag 2 – Der Gutschein für den Pflegedienst 💙",
+          erklaerung: `Dieser Umschlag enthält ${d.umschlag2} €. Aber Achtung: Das ist kein Bargeld. Es ist ein Gutschein der NUR bei zugelassenen ambulanten Pflegediensten einlösbar ist. Wenn du keinen Pflegedienst hast – bleibt dieser Umschlag einfach ungeöffnet liegen. Das Geld verfällt.`,
+          zeige: ["1", "2"],
+        },
+        {
+          titel: "Umschlag 3 – Der Gutschein für Alltagshelfer 💜",
+          erklaerung: `Dieser Umschlag enthält ${d.umschlag3} €. Auch kein Bargeld. Aber dieser Gutschein gilt bei anerkannten Alltagsbegleitern – zum Beispiel Kopf-Aktiv Erfurt. Dieser Umschlag steht dir IMMER zu, ganz egal ob du einen Pflegedienst hast oder nicht.`,
+          zeige: ["1", "2", "3"],
+        },
+        {
+          titel: strat === "A" ? "Deine Strategie: Umschlag 2 bleibt zu 👨‍👩‍👧" : "Deine Strategie: Umschlag 2 ein bisschen öffnen 🏥",
+          erklaerung: strat === "A"
+            ? `Du hast keinen Pflegedienst. Umschlag 2 bleibt geschlossen und das Geld verfällt. Dafür bekommst du dein volles Pflegegeld von ${d.umschlag1} € ausgezahlt. Für Kopf-Aktiv hast du nur die ${d.umschlag3} € aus Umschlag 3.`
+            : `Du buchst einen Mini-Pflegedienst für ${sachGenutzt} € (10 % von Umschlag 2). Das ist wie ein Schlüssel: Wer auch nur ein bisschen von Umschlag 2 nutzt, darf bis zu 40 % des Rests für Kopf-Aktiv umleiten. Das ergibt ${umwandlung} € extra. Dein Pflegegeld wird leicht gekürzt auf ${pflegegeldAnteil} €.`,
+          zeige: ["1", "2", "3", "strat"],
+        },
+        {
+          titel: "Das Ergebnis: Was bleibt wirklich übrig? 🧮",
+          erklaerung: `Kopf-Aktiv kostet ${d.preis} €. Davon übernimmt die Pflegekasse ${kasseKA} €. Dein Eigenanteil: ${eigenanteil} €. Dein Pflegegeld: ${pflegegeldAnteil} €. Nach Adam Riese: ${eigenanteil === 0 ? "Kopf-Aktiv ist vollständig gedeckt und" : `Du zahlst ${eigenanteil} € für Kopf-Aktiv und`} du hast am Ende ${netto >= 0 ? "+" : ""}${netto} € im Vergleich zu vorher.`,
+          zeige: ["1", "2", "3", "strat", "ergebnis"],
+        },
+      ];
+
+      const akt     = schritte[schritt];
+      const istLetzt = schritt === schritte.length - 1;
+
+      return (
+        <div style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, marginTop: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}>
+
+          {/* Header */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 22, fontWeight: "bold", color: GRUEN }}>💌 Die drei Briefumschläge</div>
+            <div style={{ fontSize: 13, color: GRAU_D }}>Finanzierung von Kopf-Aktiv Erfurt – Schritt für Schritt erklärt</div>
+          </div>
+
+          {/* Pflegegrad-Auswahl */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            {["pg2", "pg3"].map(k => (
+              <button key={k} onClick={() => { setPg(k); setSchritt(0); }} style={{
+                flex: 1, padding: "9px 6px", borderRadius: 8, cursor: "pointer",
+                border: `2px solid ${pg === k ? GRUEN : "#DDD"}`,
+                backgroundColor: pg === k ? GRUEN : "#fff",
+                color: pg === k ? "#fff" : GRUEN,
+                fontWeight: "bold", fontSize: 14,
+              }}>{SZENARIEN[k].label}</button>
+            ))}
+          </div>
+
+          {/* Strategie-Auswahl (nur ab Schritt 5) */}
+          {schritt >= 4 && (
+            <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+              {["A", "B"].map(k => (
+                <button key={k} onClick={() => setStrat(k)} style={{
+                  flex: 1, padding: "9px 6px", borderRadius: 8, cursor: "pointer",
+                  border: `2px solid ${strat === k ? BLAU : "#DDD"}`,
+                  backgroundColor: strat === k ? BLAU : "#fff",
+                  color: strat === k ? "#fff" : BLAU,
+                  fontWeight: "bold", fontSize: 13,
+                }}>{STRATEGIE[k].icon} {STRATEGIE[k].label}: {STRATEGIE[k].sub}</button>
+              ))}
+            </div>
+          )}
+
+          {/* Erklärungs-Box */}
+          <div style={{
+            backgroundColor: "#1A1A2E", color: "#fff", borderRadius: 12,
+            padding: "16px 18px", marginBottom: 20, minHeight: 90,
+          }}>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: "#52B788", marginBottom: 8 }}>
+              Schritt {schritt + 1} von {schritte.length}: {akt.titel}
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.7, color: "#E0E0E0" }}>
+              {akt.erklaerung}
+            </div>
+          </div>
+
+          {/* Briefumschläge */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+            <Umschlag farbe={GRUEN} farbeHell={GRUEN_HELL} emoji="💶"
+              titel="Umschlag 1: Haushaltsgeld" betrag={pflegegeldAnteil}
+              offen={akt.zeige.includes("1")} inhaltInfo="Frei verwendbar – kein Pflegedienst nötig" />
+            <Umschlag farbe={BLAU} farbeHell={BLAU_HELL} emoji="🏥"
+              titel="Umschlag 2: Pflegedienst-Gutschein" betrag={d.umschlag2}
+              offen={akt.zeige.includes("2")} inhaltInfo="Nur bei zugelassenen Pflegediensten" />
+            <Umschlag farbe={LILA} farbeHell={LILA_HELL} emoji="🤝"
+              titel="Umschlag 3: Alltagshelfer-Gutschein" betrag={d.umschlag3}
+              offen={akt.zeige.includes("3")} inhaltInfo="Gilt bei Kopf-Aktiv Erfurt ✓" />
+          </div>
+
+          {/* Ergebnis-Tabelle */}
+          {akt.zeige.includes("ergebnis") && (
+            <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.10)" }}>
+              <div style={{ backgroundColor: GRUEN, padding: "12px 16px", color: "#fff", fontWeight: "bold", fontSize: 14 }}>
+                📊 Monatliche Bilanz – {d.label} · {STRATEGIE[strat].label}
+              </div>
+              {[
+                ["Kopf-Aktiv Monatsbeitrag",                                                      `– ${d.preis} €`,     SCHWARZ],
+                ["Pflegekasse übernimmt (Umschlag 3" + (umwandlung > 0 ? " + Umwandlung" : "") + ")", `+ ${kasseKA} €`,  GRUEN_MIT],
+                ["Dein Eigenanteil für Kopf-Aktiv",                                               `– ${eigenanteil} €`, eigenanteil === 0 ? GRUEN : ORANGE],
+                ["Dein Haushaltsgeld (Umschlag 1)",                                               `+ ${pflegegeldAnteil} €`, LILA],
+              ].map(([label, wert, farbe], i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", padding: "10px 16px",
+                  backgroundColor: i % 2 === 0 ? "#FAFAFA" : "#fff",
+                  borderTop: i > 0 ? "1px solid #EEE" : "none",
+                }}>
+                  <span style={{ fontSize: 13, color: "#333" }}>{label}</span>
+                  <span style={{ fontSize: 14, fontWeight: "bold", color: farbe }}>{wert}</span>
+                </div>
+              ))}
+              <div style={{
+                padding: "14px 16px",
+                backgroundColor: netto >= 0 ? GRUEN : ORANGE,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span style={{ color: "#fff", fontWeight: "bold", fontSize: 14 }}>
+                  {netto >= 0 ? "✅ Sie haben unterm Strich" : "⚠️ Sie zahlen netto"}
+                </span>
+                <span style={{ color: "#fff", fontWeight: "bold", fontSize: 24 }}>
+                  {netto >= 0 ? "+" : ""}{netto} € / Monat
+                </span>
+              </div>
+              {netto >= 0 && (
+                <div style={{ padding: "10px 16px", backgroundColor: GRUEN_HELL, textAlign: "center" }}>
+                  <span style={{ fontSize: 13, color: GRUEN, fontWeight: "bold" }}>
+                    🎉 Kopf-Aktiv kostet Sie nichts – das Pflegegeld übersteigt den Eigenanteil
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <button onClick={() => setSchritt(s => Math.max(0, s - 1))} disabled={schritt === 0} style={{
+              flex: 1, padding: "13px", borderRadius: 8, fontSize: 15,
+              cursor: schritt === 0 ? "not-allowed" : "pointer",
+              border: "2px solid #DDD", backgroundColor: "#fff", color: GRAU_D,
+              fontWeight: "bold", opacity: schritt === 0 ? 0.4 : 1,
+            }}>← Zurück</button>
+            <button onClick={() => setSchritt(s => Math.min(schritte.length - 1, s + 1))} disabled={istLetzt} style={{
+              flex: 2, padding: "13px", borderRadius: 8, fontSize: 15,
+              cursor: istLetzt ? "default" : "pointer",
+              border: `2px solid ${GRUEN}`,
+              backgroundColor: istLetzt ? GRUEN_HELL : GRUEN,
+              color: istLetzt ? GRUEN : "#fff", fontWeight: "bold",
+            }}>{istLetzt ? "✓ Fertig erklärt" : "Weiter →"}</button>
+          </div>
+
+          {/* Fortschrittsbalken */}
+          <div style={{ marginTop: 14, backgroundColor: "#EEE", borderRadius: 4, height: 6 }}>
+            <div style={{
+              width: `${((schritt + 1) / schritte.length) * 100}%`,
+              height: "100%", backgroundColor: GRUEN, borderRadius: 4, transition: "width 0.3s",
+            }} />
+          </div>
+          <div style={{ textAlign: "center", fontSize: 11, color: GRAU_D, marginTop: 6 }}>
+            Schritt {schritt + 1} von {schritte.length}
+          </div>
+
+          {/* Footer */}
+          <div style={{ marginTop: 20, padding: "10px 14px", backgroundColor: GRAU, borderRadius: 8, fontSize: 11, color: GRAU_D, lineHeight: 1.7 }}>
+            <strong>Quellen:</strong> § 37 SGB XI (Pflegegeld: PG 2: 332 €, PG 3: 573 €) · § 36 SGB XI (Sachleistung: PG 2: 850 €, PG 3: 1.298 €) · § 45b SGB XI (Entlastungsbetrag 131 € / alle PG ab 1) · § 45b Abs. 1 S. 6 SGB XI (Sachleistungsumwandlung bis 40 %). Stand: 2025. · Kopf-Aktiv Erfurt ist anerkannter Anbieter nach § 45a SGB XI.
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+
+</body>
+</html>
